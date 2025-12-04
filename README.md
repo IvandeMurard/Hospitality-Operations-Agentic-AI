@@ -58,6 +58,7 @@ Restaurant managers spend **5-8h/week** on staffing planning with **70% accuracy
 - **[Cost Model](docs/Cost_Model.md)** - $6.65/month MVP, scale economics | [Google Sheet](https://docs.google.com/spreadsheets/d/1K2AZVUdOeTxWzZQb5FaFIbh_nJXkuGvjTrcNk0Z_OPQ/edit)
 - **[Phase 0 Review](docs/PHASE_0_REVIEW.md)** - Validation checklist, Go/No-Go decision
 
+
 ## 👨‍💻 Author
 
 **Ivan de Murard**  
