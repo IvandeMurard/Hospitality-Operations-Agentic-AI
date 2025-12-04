@@ -266,11 +266,76 @@ Problem statement solide et validé par research industry.
 
 ### 5. ARCHITECTURE DOCUMENTATION (`docs/ARCHITECTURE.md`)
 
-#### Content Quality
-- [ ] System architecture diagram clear (Frontend ↔ Backend ↔ AI/ML)
-- [ ] Data flow documented end-to-end (9 steps, prediction request)
-- [ ] Technology stack justified (Claude vs Mistral, Qdrant vs Pinecone, etc.)
-- [ ] API specifications complete (3 endpoints with examples)
-- [ ] Integration strategy defined (Mews + Apaleo compatibility)
-- [ ] Data models documented (SQL schema + Qdrant collections)
-- [ ] Security & scalability addressed (MVP →
+✅ **Content Quality**
+- [x] System architecture diagram clear (Frontend ↔ Backend ↔ AI/ML)
+- [x] Data flow documented end-to-end (9 steps, prediction request)
+- [x] Technology stack justified (Claude vs Mistral, Qdrant vs Pinecone, etc.)
+- [x] API specifications complete (3 endpoints with examples)
+- [x] Integration strategy defined (Mews + Apaleo compatibility)
+- [x] Data models documented (SQL schema + Qdrant collections)
+- [x] Security & scalability addressed (MVP → 1000 restaurants path)
+- [x] Architecture decisions explained (6 key decisions with rationale)
+- [x] Agentic-first paradigm clarified (vs API-first infrastructure)
+
+#### Validation Questions
+
+**Q1:** Can a developer understand architecture in 10 minutes?
+- [x] YES → Clear diagrams + explanations
+
+**Evidence:**
+10-minute readability test passed: TOC (2 min) + System diagram (3 min) + 
+Data flow (3 min) + Tech stack (2 min) = complete understanding. ASCII 
+diagrams functional. Could add Mermaid for visual polish in Phase 2.
+
+**Q2:** Are technology choices defensible to Mews PM?
+- [x] YES → Rationale provided for each choice
+
+**Analysis:**
+5/5 key decisions align with Mews priorities:
+- Claude Sonnet 4: Reasoning quality over cost ✅
+- Qdrant: Cost-conscious, fast performance ✅
+- Voice opt-in: Research-backed decision ✅
+- PMS-agnostic: Ecosystem strategy ✅
+- Human-in-loop: Augmented not automated ✅
+
+Section 10 documents rationale for all choices. Mews PM will recognize 
+thoughtful trade-offs.
+
+**Q3:** Does architecture scale (MVP → 100 restaurants)?
+- [x] YES → Scalability path documented
+
+**Milestones:**
+- MVP → 10: Minimal changes (upgrade tiers) ✅
+- 10 → 100: Horizontal scaling + caching (2-3 days) ✅
+- 100 → 1,000: Microservices refactor (4-6 weeks, documented) ✅
+
+Cost improves with scale: $6.65 → $1.22 (-82% at 100 restaurants). 
+No architectural dead-ends. All bottlenecks solvable.
+
+**Q4:** Is PMS integration strategy realistic (Mews + Apaleo)?
+- [x] YES → APIs documented, effort estimated, backup exists
+
+**Assessment:**
+Mews: 7h integration effort, APIs confirmed, partnership required
+Apaleo: 5h integration effort, sandbox FREE, no approval needed
+
+Dual strategy: Primary (Mews) + Backup (Apaleo Store). Demonstrates 
+interoperability = strength for enterprise. Both realistic 5-7h effort.
+
+**Q5:** Agentic-first positioning clear?
+- [x] YES → Distinct from API-first infrastructure
+
+**Validation:**
+Agentic layer (UX paradigm) vs API layer (infrastructure) clarified 
+in Section 1. Terminology consistent throughout. Aligned with industry 
+positioning (Mews Operations Agent, Apaleo AI-powered). Correction 
+applied after research validation.
+
+**Status:** ✅ APPROVED
+
+**Notes:**
+Architecture solidement documentée (12,000+ mots, 10 sections). Tous 
+les choix technologiques justifiés avec rationale claire. Scalability 
+path réaliste (MVP → 1,000 restaurants). PMS integration strategy 
+défendable avec backup plan (Mews + Apaleo). Agentic-first paradigm 
+clarifié vs API-first infrastructure. Ready pour présentation Mews PM.
