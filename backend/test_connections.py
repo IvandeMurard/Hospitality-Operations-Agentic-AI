@@ -21,23 +21,23 @@ async def test_claude():
     
     try:
         async with ClaudeClient() as client:
-            print("✓ Client Claude créé avec succès")
+            print("[OK] Client Claude créé avec succès")
             result = await client.test_connection()
             
             if result["status"] == "success":
-                print(f"✓ Connexion réussie!")
+                print(f"[OK] Connexion réussie!")
                 print(f"  Modèle: {result.get('model', 'N/A')}")
                 print(f"  Message: {result.get('message', 'N/A')}")
                 return True
             else:
-                print(f"✗ Erreur de connexion: {result.get('message', 'Unknown error')}")
+                print(f"[ERROR] Erreur de connexion: {result.get('message', 'Unknown error')}")
                 return False
     except ValueError as e:
-        print(f"✗ Erreur de configuration: {e}")
+        print(f"[ERROR] Erreur de configuration: {e}")
         print("  Assurez-vous d'avoir défini ANTHROPIC_API_KEY dans votre fichier .env")
         return False
     except Exception as e:
-        print(f"✗ Erreur inattendue: {type(e).__name__}: {e}")
+        print(f"[ERROR] Erreur inattendue: {type(e).__name__}: {e}")
         return False
 
 
@@ -49,21 +49,21 @@ async def test_qdrant():
     
     try:
         manager = QdrantManager()
-        print(f"✓ Client Qdrant créé avec succès (mode: {manager.mode})")
+        print(f"[OK] Client Qdrant créé avec succès (mode: {manager.mode})")
         
         result = await manager.test_connection()
         
         if result["status"] == "success":
-            print(f"✓ Connexion réussie!")
+            print(f"[OK] Connexion réussie!")
             print(f"  Mode: {result.get('mode', 'N/A')}")
             print(f"  Collections: {result.get('collections', 0)}")
             print(f"  Message: {result.get('message', 'N/A')}")
             return True
         else:
-            print(f"✗ Erreur de connexion: {result.get('message', 'Unknown error')}")
+            print(f"[ERROR] Erreur de connexion: {result.get('message', 'Unknown error')}")
             return False
     except Exception as e:
-        print(f"✗ Erreur inattendue: {type(e).__name__}: {e}")
+        print(f"[ERROR] Erreur inattendue: {type(e).__name__}: {e}")
         return False
 
 
@@ -85,14 +85,14 @@ async def main():
     print("\n" + "="*60)
     print("RÉSUMÉ DES TESTS")
     print("="*60)
-    print(f"Claude API:  {'✓ SUCCÈS' if results['claude'] else '✗ ÉCHEC'}")
-    print(f"Qdrant:      {'✓ SUCCÈS' if results['qdrant'] else '✗ ÉCHEC'}")
+    print(f"Claude API:  {'[OK] SUCCÈS' if results['claude'] else '[ERROR] ÉCHEC'}")
+    print(f"Qdrant:      {'[OK] SUCCÈS' if results['qdrant'] else '[ERROR] ÉCHEC'}")
     
     if all(results.values()):
-        print("\n🎉 Tous les tests sont passés avec succès!")
+        print("\n[SUCCESS] Tous les tests sont passés avec succès!")
         return 0
     else:
-        print("\n⚠️  Certains tests ont échoué. Vérifiez votre configuration.")
+        print("\n[WARNING] Certains tests ont échoué. Vérifiez votre configuration.")
         return 1
 
 

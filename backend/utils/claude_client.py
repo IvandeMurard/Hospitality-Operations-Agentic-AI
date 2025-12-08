@@ -81,3 +81,18 @@ class ClaudeClient:
             await self.client.close()
         elif hasattr(self.client, 'aclose'):
             await self.client.aclose()
+
+
+# Singleton instance
+_claude_client = None
+
+def get_claude_client() -> ClaudeClient:
+    """Get Claude client singleton (optional - can be None if API key not set)"""
+    global _claude_client
+    if _claude_client is None:
+        try:
+            _claude_client = ClaudeClient()
+        except ValueError:
+            # API key not set - return None for MVP phase (using mocked data)
+            return None
+    return _claude_client

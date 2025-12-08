@@ -50,16 +50,16 @@ async def test_endpoint(method: str, path: str, description: str) -> Dict[str, A
         
         if response.status_code == 200:
             result["status"] = "success"
-            print(f"\n✓ Succès")
+            print(f"\n[OK] Succès")
         else:
             result["status"] = "error"
-            print(f"\n✗ Erreur (code {response.status_code})")
+            print(f"\n[ERROR] Erreur (code {response.status_code})")
         
         return result
         
     except httpx.ConnectError:
         error_msg = "Impossible de se connecter au serveur. Assurez-vous que le serveur FastAPI est démarré (uvicorn main:app)"
-        print(f"\n✗ {error_msg}")
+        print(f"\n[ERROR] {error_msg}")
         return {
             "endpoint": f"{method} {path}",
             "status": "error",
@@ -67,7 +67,7 @@ async def test_endpoint(method: str, path: str, description: str) -> Dict[str, A
         }
     except Exception as e:
         error_msg = f"Erreur: {type(e).__name__}: {str(e)}"
-        print(f"\n✗ {error_msg}")
+        print(f"\n[ERROR] {error_msg}")
         return {
             "endpoint": f"{method} {path}",
             "status": "error",
@@ -105,7 +105,7 @@ async def main():
     error_count = len(results) - success_count
     
     for result in results:
-        status_icon = "✓" if result.get("status") == "success" else "✗"
+        status_icon = "[OK]" if result.get("status") == "success" else "[ERROR]"
         print(f"{status_icon} {result['endpoint']}: {result.get('status', 'unknown')}")
     
     print(f"\nTotal: {len(results)} endpoints testés")

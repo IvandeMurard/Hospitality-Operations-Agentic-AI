@@ -119,7 +119,7 @@ async def test_all():
     error_count = len(results) - success_count
     
     for result in results:
-        status_icon = "✓" if result.get("status") == "success" else "✗"
+        status_icon = "[OK]" if result.get("status") == "success" else "[ERROR]"
         print(f"{status_icon} {result['endpoint']}: {result.get('status', 'unknown')}")
     
     print(f"\nTotal: {len(results)} endpoints testés")
