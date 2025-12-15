@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Claude API Client
 Handles all interactions with Anthropic's Claude API

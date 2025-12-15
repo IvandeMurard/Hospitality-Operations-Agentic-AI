@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Data schemas for F&B Operations Agent
 Pydantic models for request/response validation

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # IMPORT UTF-8 CONFIG FIRST - before any other imports
 import utf8_config  # noqa: F401
 
@@ -25,7 +26,7 @@ app = FastAPI(
 # CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,11 +89,13 @@ async def create_prediction(request: PredictionRequest):
         # TODO Hour 3-4: Add reasoning engine + staff recommender
         # For now, return basic structure
         
-        # Create Reasoning object
+        # Extract reasoning from predictor result (now includes Claude-generated reasoning)
+        reasoning_data = result.get("reasoning", {})
+        
         reasoning = Reasoning(
-            summary=f"{int(result['confidence']*100)}% confidence based on {result['patterns_count']} similar patterns",
-            patterns_used=[],  # Empty for now, Hour 3 will populate
-            confidence_factors=["Historical patterns", "Day of week", "Similar service type"]
+            summary=reasoning_data.get("summary", f"{int(result['confidence']*100)}% confidence"),
+            patterns_used=reasoning_data.get("patterns_used", [])[:3],  # Top 3 patterns
+            confidence_factors=reasoning_data.get("confidence_factors", ["Historical patterns"])
         )
         
         # Create StaffRecommendation object

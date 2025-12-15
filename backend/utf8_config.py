@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 UTF-8 Encoding Configuration
 Must be imported FIRST before any other modules to ensure all outputs use UTF-8

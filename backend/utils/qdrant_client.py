@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Qdrant Vector Database Client
 Handles pattern storage and similarity search

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Demand Predictor Agent
 Predicts restaurant covers based on patterns, events, weather
@@ -12,9 +13,10 @@ if hasattr(sys.stderr, 'buffer') and sys.stderr.encoding != 'utf-8':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, date
 from typing import Dict, List, Optional
 import uuid
+import random
 
 from models.schemas import (
     PredictionRequest,
@@ -22,6 +24,7 @@ from models.schemas import (
     ServiceType
 )
 from utils.claude_client import get_claude_client
+from agents.reasoning_engine import get_reasoning_engine
 
 
 class DemandPredictorAgent:
@@ -62,6 +65,20 @@ class DemandPredictorAgent:
         # Step 3: Calculate prediction
         prediction = await self._calculate_prediction(similar_patterns, context)
         
+        # Step 4: Generate reasoning (NEW!)
+        reasoning_engine = get_reasoning_engine()
+        reasoning = await reasoning_engine.generate_reasoning(
+            predicted_covers=prediction["predicted_covers"],
+            confidence=prediction["confidence"],
+            patterns=similar_patterns,
+            context=context,
+            service_date=request.service_date,
+            service_type=request.service_type
+        )
+        
+        # Combine prediction + reasoning
+        prediction["reasoning"] = reasoning
+        
         return prediction
     
     async def _fetch_external_context(self, request: PredictionRequest) -> Dict:
@@ -73,26 +90,193 @@ class DemandPredictorAgent:
         """
         print("  [CONTEXT] Fetching external context...")
         
-        # Mock data for MVP
+        # Mock data for MVP - Enhanced with realistic variety
+        # Determine day type
+        day_of_week = request.service_date.strftime("%A")
+        is_weekend = request.service_date.weekday() in [5, 6]  # Saturday, Sunday
+        is_friday = request.service_date.weekday() == 4
+        
+        # Generate realistic events based on day
+        events = self._generate_mock_events(request.service_date, is_weekend)
+        print(f"  [CONTEXT] Generated {len(events)} events")  # DEBUG
+        
+        # Generate realistic weather
+        weather = self._generate_mock_weather(request.service_date, is_weekend)
+        print(f"  [CONTEXT] Weather: {weather['condition']}, {weather['temperature']}C")  # DEBUG
+        
+        # Check if holiday (simplified - just mock some dates)
+        is_holiday = self._is_mock_holiday(request.service_date)
+        print(f"  [CONTEXT] Holiday: {is_holiday}")  # DEBUG
+        
         context = {
-            "day_of_week": request.service_date.strftime("%A"),
-            "events": [
-                {
-                    "type": "Concert",
-                    "name": "Coldplay Concert",
-                    "distance_km": 3.2,
-                    "expected_attendance": 50000
-                }
-            ] if request.service_date.weekday() == 5 else [],  # Saturday only
-            "weather": {
-                "condition": "Clear" if request.service_date.weekday() < 5 else "Rain",
-                "temperature": 18
-            },
-            "is_holiday": False  # Could check calendar
+            "day_of_week": day_of_week,
+            "events": events,
+            "weather": weather,
+            "is_holiday": is_holiday,
+            "day_type": "weekend" if is_weekend else "friday" if is_friday else "weekday"
         }
         
-        print(f"  [CONTEXT] OK - {context['day_of_week']}, {len(context['events'])} events")
+        print(f"  [CONTEXT] OK - {context['day_of_week']} ({context['day_type']}), {len(context['events'])} events")
         return context
+    
+    def _generate_mock_events(self, service_date: date, is_weekend: bool) -> List[Dict]:
+        """
+        Generate realistic mock events based on date
+        
+        Phase 1: Deterministic mock data
+        Phase 2: Real PredictHQ API integration
+        """
+        events = []
+        
+        # Seed random with date for deterministic results
+        random.seed(service_date.toordinal())
+        
+        # Weekend = higher chance of events
+        event_probability = 0.7 if is_weekend else 0.3
+        
+        if random.random() < event_probability:
+            # Event types pool
+            event_types = [
+                {
+                    "type": "Concert",
+                    "names": ["Coldplay", "Taylor Swift", "Ed Sheeran", "Beyonce"],
+                    "attendance_range": (30000, 60000),
+                    "distance_range": (1.5, 5.0),
+                    "impact": "high"
+                },
+                {
+                    "type": "Sports Match",
+                    "names": ["PSG vs Marseille", "France vs England", "Champions League Final"],
+                    "attendance_range": (40000, 80000),
+                    "distance_range": (2.0, 6.0),
+                    "impact": "high"
+                },
+                {
+                    "type": "Theater Show",
+                    "names": ["Hamilton", "Les Miserables", "Phantom of the Opera"],
+                    "attendance_range": (1000, 3000),
+                    "distance_range": (0.5, 2.0),
+                    "impact": "medium"
+                },
+                {
+                    "type": "Conference",
+                    "names": ["Tech Summit", "Marketing Expo", "Healthcare Forum"],
+                    "attendance_range": (500, 2000),
+                    "distance_range": (0.2, 1.5),
+                    "impact": "medium"
+                }
+            ]
+            
+            # Pick random event type
+            event_type = random.choice(event_types)
+            
+            # Generate event details
+            event = {
+                "type": event_type["type"],
+                "name": random.choice(event_type["names"]),
+                "distance_km": round(random.uniform(*event_type["distance_range"]), 1),
+                "expected_attendance": random.randint(*event_type["attendance_range"]),
+                "start_time": "20:00" if event_type["type"] in ["Concert", "Theater Show"] else "19:00",
+                "impact": event_type["impact"]
+            }
+            
+            events.append(event)
+            
+            # 20% chance of second event on weekends
+            if is_weekend and random.random() < 0.2:
+                second_type = random.choice([t for t in event_types if t != event_type])
+                second_event = {
+                    "type": second_type["type"],
+                    "name": random.choice(second_type["names"]),
+                    "distance_km": round(random.uniform(*second_type["distance_range"]), 1),
+                    "expected_attendance": random.randint(*second_type["attendance_range"]),
+                    "start_time": "21:00",
+                    "impact": second_type["impact"]
+                }
+                events.append(second_event)
+        
+        return events
+    
+    def _generate_mock_weather(self, service_date: date, is_weekend: bool) -> Dict:
+        """
+        Generate realistic mock weather based on date
+        
+        Phase 1: Deterministic mock data
+        Phase 2: Real Weather API integration
+        """
+        random.seed(service_date.toordinal() + 1000)  # Different seed than events
+        
+        # Weather conditions pool with probabilities
+        conditions = [
+            ("Clear", 0.4),
+            ("Partly Cloudy", 0.3),
+            ("Cloudy", 0.15),
+            ("Rain", 0.10),
+            ("Heavy Rain", 0.03),
+            ("Snow", 0.02)
+        ]
+        
+        # Select weather based on probabilities
+        rand = random.random()
+        cumulative = 0
+        selected_condition = "Clear"
+        
+        for condition, prob in conditions:
+            cumulative += prob
+            if rand <= cumulative:
+                selected_condition = condition
+                break
+        
+        # Temperature varies by month
+        month = service_date.month
+        if month in [12, 1, 2]:  # Winter
+            temp_range = (0, 10)
+        elif month in [3, 4, 5]:  # Spring
+            temp_range = (10, 20)
+        elif month in [6, 7, 8]:  # Summer
+            temp_range = (20, 30)
+        else:  # Fall
+            temp_range = (10, 20)
+        
+        temperature = random.randint(*temp_range)
+        
+        # Precipitation and wind based on condition
+        precipitation = {
+            "Clear": 0,
+            "Partly Cloudy": random.randint(0, 10),
+            "Cloudy": random.randint(10, 30),
+            "Rain": random.randint(40, 70),
+            "Heavy Rain": random.randint(70, 100),
+            "Snow": random.randint(30, 60)
+        }.get(selected_condition, 0)
+        
+        wind_speed = random.randint(5, 25)
+        
+        return {
+            "condition": selected_condition,
+            "temperature": temperature,
+            "precipitation": precipitation,
+            "wind_speed": wind_speed
+        }
+    
+    def _is_mock_holiday(self, service_date: date) -> bool:
+        """
+        Check if date is a holiday
+        
+        Phase 1: Mock major holidays
+        Phase 2: Real calendar API
+        """
+        # Mock some major holidays (simplified)
+        holidays = [
+            (12, 25),  # Christmas
+            (12, 31),  # New Year's Eve
+            (1, 1),    # New Year's Day
+            (7, 14),   # Bastille Day (France)
+            (11, 11),  # Veterans Day
+            (5, 1),    # Labor Day
+        ]
+        
+        return (service_date.month, service_date.day) in holidays
     
     async def _find_similar_patterns(
         self, 
