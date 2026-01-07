@@ -1,18 +1,28 @@
-# F&B Operations Agent - MVP
+# F&B Operations Agent – MVP
 
 **Portfolio case study to gain AI product management and agentic design expertise**
 
 ## 📊 Problem
 
-Restaurant managers spend **5-8h/week** on staffing planning with **70% accuracy**. This agent delivers **85%+ accuracy** in **2h/week**.
+1. Hotel & restaurant teams spend **5–8h/week** building staffing plans with **limited forecast accuracy**, instead of focusing on guests and operations.  
+2. Core systems (PMS, RMS, POS, WFM) are rarely well integrated, so revenue forecasts and staffing/inventory decisions live in silos rather than feeding each other.  
 
-## ✨ Features (MVP)
+## 🎯 Project Vision
 
-- 🎯 **Prediction Display**: Covers forecast + confidence + staff recommendations
-- 🧠 **Reasoning**: Explainable AI with similar pattern matching
-- ✅ **Approval Flow**: Human-in-the-loop (approve/reject/adjust)
-- 🎤 **Voice Input**: Hands-free predictions (opt-in)
-- ⚡ **Command Palette**: Keyboard-first UX (⌘K / Ctrl+K / ²)
+Build an AI **decision engine** for hotel F&B operations that:
+
+- Connects to existing systems (PMS, RMS, POS, WFM) instead of replacing them  
+- Predicts demand (covers, sales, activity) using:
+  - External context: events, weather, holidays  
+  - Historical patterns: vector search with Qdrant  
+  - Internal hotel data: PMS occupancy, bookings, POS data (Phase 2)  
+- Generates **staffing & F&B recommendations** that can be pushed into existing workforce management tools (e.g. HotSchedules)  
+- Uses LLM reasoning to provide **explainable predictions and “what-if” scenarios** for managers  
+- Exposes a **conversational agent** interface-first solution rather than “yet another dashboard”, with:
+  - Minimal UI for traceability, audit, and multi-site monitoring
+  - On-demand views only for when managers need to inspect or challenge the reasoning  
+
+Core principle: **Augmented hospitality**. AI handles forecasting, data stitching, and suggestions; managers keep control, make the final call, and focus on high-value human interactions with guests and teams.
 
 ## 🏗️ Tech Stack
 
@@ -35,7 +45,8 @@ Restaurant managers spend **5-8h/week** on staffing planning with **70% accuracy
 ## 🚀 Status
 
 ✅ **Phase 0: Strategic Preparation** (Complete - 10.5h)  
-🚧 **Phase 1: Backend Development** (In Progress)
+🚧 **Phase 1: Backend Development** - 64% complete (7/11 issues)
+**Phase 2 - Integrations and Advanced Features**
 
 ## 📚 Documentation
 
@@ -45,9 +56,21 @@ Restaurant managers spend **5-8h/week** on staffing planning with **70% accuracy
 - **[Cost Model](docs/Cost_Model.md)** - $6.65/month MVP, scale economics
 - **[Phase 0 Review](docs/PHASE_0_REVIEW.md)** - Validation checklist, Go/No-Go decision
 
+## 🔗 Links
+- Linear Project: https://linear.app/ivanportfolio/project/fandb-agent-640279ce7d36
+- GitHub Repo: https://github.com/IvandeMurard/fb-agent-mvp
+- Figma Mockups: [Link to Figma] (to add)
+- Live Demo: (Phase 1 deployment pending)
+
 ## 👨‍💻 Author
 
 **Ivan de Murard**  
 [Portfolio](https://ivandemurard.lovable.app) • [LinkedIn](https://linkedin.com/in/ivandemurard)
+
+## 📄 License
+MIT License - See LICENSE for details
+
+## Last updated: January 7, 2026
+Status: Phase 1 MVP in progress (64% complete)
 
 ---
