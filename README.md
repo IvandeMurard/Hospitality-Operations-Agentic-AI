@@ -1,22 +1,28 @@
-# F&B Operations Agent - Portfolio Case Study
+# F&B Operations Agent – MVP
 
-AI agent predicting restaurant covers and recommending optimal staffing levels.
+**Portfolio case study to gain AI product management and agentic design expertise**
 
-**Status:** Phase 1 MVP - 64% complete (7/11 issues)  
-**Target:** Demo-ready backend API by January 31, 2026  
-**Time invested:** 15 hours (Phase 0: 10.5h, Phase 1: 4.5h)
+## 📊 Problem
 
----
+1. Hotel & restaurant teams spend **5–8h/week** building staffing plans with **limited forecast accuracy**, instead of focusing on guests and operations.  
+2. Core systems (PMS, RMS, POS, WFM) are rarely well integrated, so revenue forecasts and staffing/inventory decisions live in silos rather than feeding each other.  
 
 ## 🎯 Project Vision
 
-Predictive AI agent for hotel F&B operations that combines:
-- **External context:** Events, weather, holidays
-- **Historical patterns:** Vector search with Qdrant
-- **Internal hotel data:** PMS occupancy (Phase 2)
-- **Claude AI reasoning:** Explainable predictions
+Build an AI **decision engine** for hotel F&B operations that:
 
-**Core principle:** *Augmented Hospitality* - AI handles mundane predictions, managers focus on high-value human interactions.
+- Connects to existing systems (PMS, RMS, POS, WFM) instead of replacing them  
+- Predicts demand (covers, sales, activity) using:
+  - External context: events, weather, holidays, ...,
+  - Historical patterns: vector search with Qdrant  
+  - Internal hotel data: PMS occupancy, bookings, POS data (Phase 2)  
+- Generates **staffing & F&B recommendations** that can be pushed into existing workforce management tools (e.g. HotSchedules)  
+- Uses LLM reasoning to provide **explainable predictions and “what-if” scenarios** for managers  
+- Exposes a **conversational agent** interface rather than “yet another dashboard”, with:
+  - Minimal UI for traceability, audit, and multi-site monitoring  
+  - On-demand views only when managers need to inspect or challenge the reasoning  
+
+Core principle: **Augmented hospitality** – AI handles forecasting, data stitching, and suggestions; managers keep control, make the final call, and focus on high-value human interactions with guests and teams.
 
 ---
 
@@ -33,73 +39,6 @@ Updated weekly (Monday 9am) based on:
 - 🔥 **NOW:** Fix contextual patterns bug (IVA-29) - Critical blocker
 - ⏭️ **NEXT:** Complete MVP (Staff Recommender, tests, deploy, docs)
 - 📅 **LATER:** Phase 2 integrations (PMS, real APIs, Qdrant search)
-
----
-
-## 🚀 Quick Start
-
-### Backend API (Local Development)
-
-```bash
-# Clone repo
-git clone https://github.com/IvandeMurard/fb-agent-mvp.git
-cd fb-agent-mvp/backend
-
-# Setup environment
-python -m venv venv
-source venv/bin/activate  # Windows: .\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-
-# Configure API keys
-cp .env.example .env
-# Edit .env with your ANTHROPIC_API_KEY
-
-# Run server
-python main.py
-```
-
-Server available at: http://localhost:8000
-
-Interactive docs: http://localhost:8000/docs
-
----
-
-## 📡 API Usage
-
-### Make a prediction
-
-```bash
-curl -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "restaurant_id": "resto_123",
-    "service_date": "2024-12-15",
-    "service_type": "dinner"
-  }'
-```
-
-### Response example
-
-```json
-{
-  "prediction_id": "pred_abc123",
-  "predicted_covers": 143,
-  "confidence": 0.91,
-  "reasoning": {
-    "summary": "High confidence for Saturday dinner. Marketing Expo nearby (0.9km) and consistent weekend patterns suggest strong traffic.",
-    "confidence_factors": [
-      "Similar Saturday patterns",
-      "Conference nearby (0.9km)",
-      "Weather: Partly Cloudy"
-    ]
-  },
-  "staff_recommendation": {
-    "servers": {"recommended": 8, "usual": 7, "delta": 1},
-    "hosts": {"recommended": 2, "usual": 2, "delta": 0},
-    "kitchen": {"recommended": 3, "usual": 3, "delta": 0}
-  }
-}
-```
 
 ---
 
@@ -154,31 +93,16 @@ FastAPI Backend
 ### ⚠️ Known Limitations
 
 **Critical Issues (Phase 1):**
-- ❌ Patterns always static (Coldplay/U2 concerts hardcoded)
-- ❌ Predictions always ~143 covers (no context variation)
-- ❌ Christmas treated as regular day (should be 40-70 covers)
+- ❌ Patterns always static
+- ❌ Predictions lack context variation
+- ❌ Christmas treated as regular day
 - ❌ No PMS integration (missing 40% prediction accuracy)
-
-**See full limitations:** [PHASE_1_LIMITATIONS.md](docs/PHASE_1_LIMITATIONS.md) (to create)
-
-**Why document honestly?**
-Demonstrates PM critical thinking > marketing spin. Mews PM values transparency.
 
 ---
 
 ## 🔮 What's Next (Phase 2-3)
 
-**Phase 2 - Real Integrations (Feb 2026):**
-- PMS integration (Mews/Apaleo) - occupancy, events, guests
-- Real APIs: PredictHQ (events), Weather
-- Qdrant semantic pattern matching
-- Restaurant-specific configurations
-
-**Phase 2 - UI Features:**
-- Manager approval workflows
-- Voice input (evaluate based on industry research)
-- Command palette
-- ElevenLabs voice synthesis
+**Phase 2 - Real Integrations + UI Features (Feb 2026)**
 
 **Backlog - Advanced Features:**
 - Continuous learning + prediction accuracy tracking
@@ -217,14 +141,8 @@ Demonstrates PM critical thinking > marketing spin. Mews PM values transparency.
 3. **Explainability:** Transparent reasoning (EU AI Act compliant)
 4. **Focus:** Operations-driven (not just analytics dashboards)
 
-**Portfolio Goal:**
-Demonstrate AI PM capabilities through:
-- Working prototype (technical execution)
-- Comprehensive case study (strategic thinking)
-- Critical analysis (honest assessment of limitations)
-
 **Why This Project?**
-- Hospitality = target industry (Mews, Apaleo)
+- Hospitality = 
 - Agentic AI = emerging paradigm (first-mover advantage)
 - Operations focus = real manager pain (not toy project)
 
@@ -235,7 +153,7 @@ Demonstrate AI PM capabilities through:
 **Phase 0 (Complete - Dec 2025):**
 - Time: 10.5h
 - Output: 6 documents, 4 Figma screens, ~25K words
-- Validation: Problem validated, Cost model profitable (89% margin)
+- Validation: Problem validated, Cost model defined
 
 **Phase 1 (64% Complete - Jan 2026):**
 - Time: 4.5h (Hours 1-2 complete)
@@ -267,10 +185,7 @@ Demonstrate AI PM capabilities through:
 ## 👤 Author
 
 **Ivan de Murard**
-- Former restaurant server → AI Product Manager
-- Background: Hospitality operations + AI/ML
-- Target role: Product Manager @ Mews
-- Portfolio: [ivandemurard.com](https://ivandemurard.com) (to create)
+- Portfolio: [ivandemurard.com](https://ivandemurard.com)
 
 ---
 
