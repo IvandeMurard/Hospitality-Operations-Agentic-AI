@@ -1,3 +1,8 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Powered by](https://img.shields.io/badge/Powered%20by-Hospitality--Operations--Agentic--AI-blue.svg)](https://github.com/IvandeMurard/Hospitality-Operations-Agentic-AI)
+
+Powered by [Hospitality-Operations-Agentic-AI](https://github.com/IvandeMurard/Hospitality-Operations-Agentic-AI) – MIT licensed
+
 # F&B Operations Agent – MVP
 
 **Portfolio case study to gain AI product management and agentic design expertise**
