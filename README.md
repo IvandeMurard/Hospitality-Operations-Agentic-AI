@@ -22,12 +22,12 @@ F&B Operations Agent (intelligence layer for staffing predictions):
   - Historical patterns: vector search with Qdrant  
   - Internal hotel data: PMS occupancy, bookings, POS data (Phase 2)  
 - Generates **staffing & F&B recommendations** that can be pushed into existing workforce management tools (e.g. HotSchedules)  
-- Uses LLM reasoning to provide **explainable predictions and “what-if” scenarios** for managers  
-- Exposes a **conversational agent** interface rather than “yet another dashboard”, with:
-  - Minimal UI for traceability, audit, and multi-site monitoring  
-  - On-demand views only when managers need to inspect or challenge the reasoning  
+- Uses LLM reasoning to provide **explainable predictions** for managers  
+- Exposes a **conversational agent**-first interface with:
+  - Minimal UI for traceability and audit 
+  - On-demand views only when managers need to inspect or challenge the reasoning
 
-Core principle: **Augmented hospitality** – AI handles forecasting, data stitching, and suggestions; managers keep control, make the final call, and focus on high-value human interactions with guests and teams.
+Core principle: **Augmented hospitality**. AI handles forecasting, data stitching, and suggestions; managers keep control, make the final call (human-in-the-loop), and can focus on high-value human interactions with guests and teams.
 
 ---
 
@@ -113,7 +113,7 @@ FastAPI Backend
 - Continuous learning + prediction accuracy tracking
 - No-show risk prediction
 - NLU intent recognition
-- Semantic layer (PMS-agnostic)
+- Semantic layer (the PMS-agnostic glue)
 
 ---
 
@@ -134,7 +134,7 @@ FastAPI Backend
 
 **Figma Mockups:** [Link to Figma] (to add)
 
-**Live Demo:** coming soon
+**Live Demo:** **coming soon, keep in touch!**
 
 ---
 
