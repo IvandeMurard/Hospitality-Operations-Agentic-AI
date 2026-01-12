@@ -97,8 +97,9 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {
-        "message": "F&B Operations Agent API",
-        "status": "Phase 1 - Backend Development",
+        "name": "F&B Operations Agent API",
+        "version": "1.0.0",
+        "status": "running",
         "docs": "/docs"
     }
 
