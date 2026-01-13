@@ -108,7 +108,8 @@ An **agentic AI system** that autonomously predicts staffing needs using:
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | **Backend** | FastAPI + Python 3.11 | REST API, multi-agent orchestration |
-| **AI/ML** | Claude Sonnet 4 (Anthropic) | Reasoning engine, embeddings generation |
+| **AI/ML** | Claude Sonnet 4 (Anthropic) | Reasoning engine, natural language explanations |
+| **Embeddings** | Mistral Embed | Vector embeddings for semantic search (1024 dim) |
 | **Vector DB** | Qdrant Cloud | Semantic pattern search |
 | **Database** | Supabase (PostgreSQL) | Prediction history, analytics |
 | **Cache** | Redis (Upstash) | Session state, conversation context |
@@ -120,9 +121,26 @@ An **agentic AI system** that autonomously predicts staffing needs using:
 
 ## 🚀 Live Demo
 
-**API Endpoint:** [https://huggingface.co/spaces/IvandeMurard/fb-agent-api](https://huggingface.co/spaces/IvandeMurard/fb-agent-api)
+**API Endpoint:** [https://ivandemurard-fb-agent-api.hf.space](https://ivandemurard-fb-agent-api.hf.space)
 
-**Interactive Documentation:** Add `/docs` to the endpoint for Swagger UI
+**Interactive Documentation:** [https://ivandemurard-fb-agent-api.hf.space/docs](https://ivandemurard-fb-agent-api.hf.space/docs)
+
+### Quick Test
+```bash
+curl -X POST "https://ivandemurard-fb-agent-api.hf.space/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"restaurant_id": "demo", "service_date": "2025-01-18", "service_type": "dinner"}'
+```
+
+**Example Response:**
+```json
+{
+  "predicted_covers": 20,
+  "confidence": 0.94,
+  "method": "weighted_average",
+  "reasoning": "High confidence prediction for a typical Saturday dinner service. Based on consistent historical weekend patterns..."
+}
+```
 
 ---
 
@@ -135,12 +153,13 @@ The system requires the following environment variables:
 ANTHROPIC_API_KEY=sk-ant-...          # Claude AI
 QDRANT_API_KEY=...                    # Vector database
 QDRANT_URL=https://...                # Qdrant cluster URL
+MISTRAL_API_KEY=...                   # Embeddings generation
 
 # Optional (for enhanced features)
 SUPABASE_URL=...                      # Database
 SUPABASE_KEY=...                      # Database auth
 REDIS_URL=...                         # Session cache
-ELEVENLABS_API_KEY=...                # Voice interface (future)
+ELEVENLABS_API_KEY=...                  # Voice interface (future)
 PREDICTHQ_API_KEY=...                 # Events data (future)
 OPENWEATHER_API_KEY=...               # Weather data (future)
 ```
@@ -161,16 +180,20 @@ See `requirements.txt` for Python dependencies.
 - Integration test suite (7 scenarios)
 - HuggingFace Spaces deployment
 
-### 🚧 Phase 2: RAG Implementation (Current)
+### ✅ Phase 2: COMPLETE — RAG Implementation
 
-**Replace mock data with real patterns**
+**Real pattern-based predictions**
 
-- Download & process Kaggle Hotel Booking dataset (119K reservations)
-- Derive F&B covers from hotel occupancy data
-- Seed Qdrant with pattern embeddings (vector search)
-- Replace mock data patterns with semantic similarity search
-- PMS Adapter pattern (foundation for multi-PMS support)
-- Forecasting methods research (MAPE, industry standards)
+- Kaggle Hotel Booking dataset processed (119K reservations → 495 F&B patterns)
+- Qdrant vector database seeded with Mistral embeddings (1024 dim)
+- Semantic similarity search replaces mock data
+- Validation tests passing (4/4 scenarios)
+- Live API deployed with real vector search
+
+**Technical details:**
+- Patterns derived from meal plans, day types, weather, events, holidays
+- Cosine similarity scoring (typical: 0.92-0.95)
+- Fallback to mock if Qdrant unavailable
 
 ### 📋 Phase 3: Dashboard & Integrations (Next)
 
@@ -200,19 +223,28 @@ fb-agent/
 ├── backend/
 │   ├── agents/              # Multi-agent system
 │   │   ├── coordinator.py   # Request routing
-│   │   ├── demand_predictor.py
+│   │   ├── demand_predictor.py  # Qdrant vector search + prediction
 │   │   ├── staff_recommender.py
 │   │   └── reasoning_engine.py
 │   ├── models/              # Pydantic schemas
+│   ├── scripts/             # Data processing
+│   │   ├── derive_covers.py     # Kaggle → F&B patterns
+│   │   ├── seed_qdrant.py       # Patterns → Qdrant embeddings
+│   │   └── create_qdrant_index.py
+│   ├── data/
+│   │   ├── raw/             # Source datasets
+│   │   └── processed/       # Generated patterns (495)
+│   ├── tests/               # Validation tests
+│   │   └── test_rag_validation.py
 │   ├── utils/               # Helpers (logging, config)
 │   └── api.py               # FastAPI app
 ├── docs/
-│   ├── ARCHITECTURE.md      # Technical architecture (detailed)
-│   ├── Problem_Statement.md
-│   └── MVP_SCOPE.md
-├── requirements.txt         # Python dependencies
-├── Dockerfile               # HuggingFace deployment
-└── README.md               # This file
+│   ├── ARCHITECTURE.md
+│   ├── PHASE_1_LIMITATIONS.md
+│   └── Problem_Statement.md
+├── requirements.txt
+├── Dockerfile
+└── README.md
 ```
 
 ---
@@ -241,7 +273,7 @@ MIT License
 Copyright (c) 2025 Ivan de Murard
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
+of this software and associated files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
