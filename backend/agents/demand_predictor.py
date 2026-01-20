@@ -358,7 +358,13 @@ class DemandPredictorAgent:
         return holidays.get((service_date.month, service_date.day))
     
     def _build_context_string(self, request: PredictionRequest, context: Dict) -> str:
-        """Build context string for embedding (same format as seed_qdrant.py)"""
+        """
+        Build context string for embedding (matches seed_qdrant.py format).
+        
+        Note: Does not include 'actual_covers' as this is the value to predict,
+        not a contextual feature. This ensures query embeddings are semantically
+        compatible with indexed pattern embeddings.
+        """
         events_str = ", ".join([e["type"] for e in context.get("events", [])]) or "None"
         weather = context.get("weather", {})
         

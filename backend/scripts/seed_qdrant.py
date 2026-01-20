@@ -56,7 +56,13 @@ def create_collection(qdrant: QdrantClient):
     )
 
 def pattern_to_context(pattern: dict) -> str:
-    """Convert pattern to embeddable context string"""
+    """
+    Convert pattern to embeddable context string.
+    
+    Note: Does not include 'actual_covers' as this is the value to predict,
+    not a contextual feature. This ensures query embeddings (from demand_predictor.py)
+    are semantically compatible with indexed pattern embeddings.
+    """
     events_str = ", ".join([e["type"] for e in pattern.get("events", [])]) or "None"
     weather = pattern.get("weather", {})
     
@@ -67,8 +73,7 @@ Hotel occupancy: {pattern['hotel_occupancy']}
 Guests in house: {pattern['guests_in_house']}
 Weather: {weather.get('condition', 'Unknown')}, {weather.get('temperature', 'N/A')}°C
 Events nearby: {events_str}
-Holiday: {pattern.get('holiday_name', 'None') if pattern.get('is_holiday') else 'None'}
-Actual covers: {pattern['actual_covers']}"""
+Holiday: {pattern.get('holiday_name', 'None') if pattern.get('is_holiday') else 'None'}"""
 
 def embed_batch(mistral: Mistral, texts: list[str]) -> list[list[float]]:
     """Get embeddings for a batch of texts"""
