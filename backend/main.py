@@ -123,7 +123,8 @@ from backend.models.schemas import (
     PredictionResponse,
     Reasoning,
     StaffRecommendation,
-    StaffDelta
+    StaffDelta,
+    AccuracyMetrics
 )
 from backend.agents.demand_predictor import get_demand_predictor
 
@@ -184,6 +185,16 @@ async def create_prediction(request: PredictionRequest):
             covers_per_staff=staff_data.get("covers_per_staff", 0.0)
         )
         
+        # Extract accuracy_metrics from result
+        accuracy_data = result.get("accuracy_metrics", {})
+        accuracy_metrics = None
+        if accuracy_data:
+            # Convert tuple to list for prediction_interval if present
+            if "prediction_interval" in accuracy_data and accuracy_data["prediction_interval"]:
+                if isinstance(accuracy_data["prediction_interval"], tuple):
+                    accuracy_data["prediction_interval"] = list(accuracy_data["prediction_interval"])
+            accuracy_metrics = AccuracyMetrics(**accuracy_data)
+        
         # Return PredictionResponse
         return PredictionResponse(
             prediction_id=f"pred_{uuid.uuid4().hex[:8]}",
@@ -193,6 +204,7 @@ async def create_prediction(request: PredictionRequest):
             confidence=result["confidence"],
             reasoning=reasoning,
             staff_recommendation=staff_recommendation,
+            accuracy_metrics=accuracy_metrics,
             created_at=datetime.now(timezone.utc).isoformat()
         )
         

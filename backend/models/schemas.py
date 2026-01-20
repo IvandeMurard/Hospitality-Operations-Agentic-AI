@@ -68,6 +68,15 @@ class StaffRecommendation(BaseModel):
     covers_per_staff: float
 
 
+class AccuracyMetrics(BaseModel):
+    """Accuracy metrics for prediction"""
+    method: str
+    estimated_mape: Optional[float] = None
+    prediction_interval: Optional[List[int]] = None
+    patterns_analyzed: Optional[int] = None
+    note: Optional[str] = None
+
+
 class PredictionResponse(BaseModel):
     """Response model for prediction endpoint"""
     model_config = ConfigDict(
@@ -102,4 +111,5 @@ class PredictionResponse(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     reasoning: Reasoning
     staff_recommendation: StaffRecommendation
+    accuracy_metrics: Optional[AccuracyMetrics] = None
     created_at: str
