@@ -125,21 +125,6 @@ An **agentic AI system** that autonomously predicts staffing needs using:
 
 **Interactive Documentation:** [https://ivandemurard-fb-agent-api.hf.space/docs](https://ivandemurard-fb-agent-api.hf.space/docs)
 
-### Quick Test
-```bash
-curl -X POST "https://ivandemurard-fb-agent-api.hf.space/predict" \
-  -H "Content-Type: application/json" \
-  -d '{"restaurant_id": "demo", "service_date": "2025-01-18", "service_type": "dinner"}'
-```
-
-**Example Response:**
-```json
-{
-  "predicted_covers": 20,
-  "confidence": 0.94,
-  "method": "weighted_average",
-  "reasoning": "High confidence prediction for a typical Saturday dinner service. Based on consistent historical weekend patterns..."
-}
 ```
 
 ---
