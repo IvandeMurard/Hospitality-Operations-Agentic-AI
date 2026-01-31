@@ -19,7 +19,7 @@ pinned: false
 
 > **An intelligence layer that lives WHERE you work, not another dashboard to check.**
 >
-> AI-powered demand forecasting for hotel F&B operations — connecting to any PMS through a semantic abstraction and delivering insights where managers actually work: dashboard, WhatsApp, Slack, or Teams.
+> AI-powered demand forecasting for hotel F&B operations. With easy connect to any PMS through a semantic abstraction, delivering insights where managers actually work: dashboard, WhatsApp, Slack, or PMS.
 
 ---
 
