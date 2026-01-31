@@ -34,7 +34,7 @@ Most hotel tech adds another screen to check. The F&B Operations Agent takes a d
 | Passive data consumption | Active dialogue & continuous learning |
 | Feedback is an extra step | Feedback is a natural reply |
 
-**The goal:** An agent that feels like a knowledgeable colleague who messages you with tomorrow's forecast, learns from your corrections, and gets smarter over time.
+**The goal:** An agent that feels like a knowledgeable colleague who messages you with tomorrow's forecast, learns from your corrections, and gets smarter over time, learning from your context.
 
 ---
 
