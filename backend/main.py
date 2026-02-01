@@ -87,6 +87,10 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+# F&B Agent API routes (restaurant profile, predictions, feedback)
+from backend.api.routes import router as api_router
+app.include_router(api_router)
+
 @app.get("/")
 async def root():
     return {
@@ -127,6 +131,7 @@ from backend.models.schemas import (
     AccuracyMetrics
 )
 from backend.agents.demand_predictor import get_demand_predictor
+from backend.api.prediction_store import store_prediction_for_feedback
 
 @app.post("/predict", response_model=PredictionResponse)
 async def create_prediction(request: PredictionRequest):
@@ -194,10 +199,51 @@ async def create_prediction(request: PredictionRequest):
                 if isinstance(accuracy_data["prediction_interval"], tuple):
                     accuracy_data["prediction_interval"] = list(accuracy_data["prediction_interval"])
             accuracy_metrics = AccuracyMetrics(**accuracy_data)
-        
+
+        # Extraire range_low et range_high
+        interval = accuracy_metrics.prediction_interval if accuracy_metrics else None
+        range_low = interval[0] if interval and len(interval) >= 2 else result["predicted_covers"] - 10
+        range_high = interval[1] if interval and len(interval) >= 2 else result["predicted_covers"] + 10
+
+        # Extraire patterns pour stockage (convertis en dict si besoin)
+        patterns_for_storage = []
+        if reasoning_data and "patterns_used" in reasoning_data:
+            raw = reasoning_data["patterns_used"]
+            for p in raw:
+                if isinstance(p, dict):
+                    patterns_for_storage.append(p)
+                elif hasattr(p, "model_dump"):
+                    patterns_for_storage.append(p.model_dump())
+                else:
+                    patterns_for_storage.append(dict(p) if hasattr(p, "__iter__") else {})
+
+        # Extraire confidence_factors
+        confidence_factors = reasoning_data.get("confidence_factors", []) if reasoning_data else []
+
+        # Stocker en Supabase pour feedback loop
+        stored_id = None
+        try:
+            stored_id = store_prediction_for_feedback(
+                restaurant_id=request.restaurant_id,
+                service_date=request.service_date,
+                service_type=request.service_type.value if hasattr(request.service_type, "value") else str(request.service_type),
+                predicted_covers=result["predicted_covers"],
+                confidence=result["confidence"],
+                range_low=range_low,
+                range_high=range_high,
+                estimated_mape=accuracy_metrics.estimated_mape if accuracy_metrics else None,
+                patterns=patterns_for_storage,
+                confidence_factors=confidence_factors
+            )
+        except Exception as e:
+            logger.warning(f"[PREDICT] Store for feedback failed: {e}")
+
+        # Utiliser l'UUID Supabase si disponible, sinon fallback
+        prediction_id = stored_id if stored_id else f"pred_{uuid.uuid4().hex[:8]}"
+
         # Return PredictionResponse
         return PredictionResponse(
-            prediction_id=f"pred_{uuid.uuid4().hex[:8]}",
+            prediction_id=prediction_id,
             service_date=request.service_date,
             service_type=request.service_type,
             predicted_covers=result["predicted_covers"],
