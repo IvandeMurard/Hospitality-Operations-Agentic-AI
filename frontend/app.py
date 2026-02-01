@@ -3,6 +3,7 @@ F&B Operations Agent - Dashboard
 Streamlit MVP for prediction visualization
 """
 
+import os
 import streamlit as st
 import requests
 import pandas as pd
@@ -11,8 +12,14 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 import plotly.graph_objects as go
 
-# Configuration
-API_URL = "https://ivandemurard-fb-agent-api.hf.space"
+# Configuration (use API_URL env for local dev, e.g. http://localhost:8000)
+API_URL = os.getenv("API_URL", "https://ivandemurard-fb-agent-api.hf.space")
+
+# Initialize session state for prediction persistence
+if "prediction_data" not in st.session_state:
+    st.session_state.prediction_data = None
+if "has_prediction" not in st.session_state:
+    st.session_state.has_prediction = False
 
 # Explanatory content (English)
 EXPLAINER_CONTENT = {
@@ -69,6 +76,7 @@ Advanced metrics for technical users:
 # Historical baseline (derived from patterns)
 BASELINE_STATS = {
     "weekly_covers_range": (180, 320),
+    "breakeven_covers": 35,
     "avg_daily_dinner": 35,
     "avg_daily_lunch": 22,
     "avg_daily_breakfast": 28,
@@ -112,6 +120,130 @@ def detect_drift(confidence, mape):
     elif confidence < 0.70 and mape > 50:
         return "Model uncertainty high — consider manual validation for this prediction."
     return None
+
+
+def get_factor_breakdown(reasoning: dict, predicted_covers: int) -> list:
+    """
+    Generate human-readable factor breakdown from reasoning data.
+    Returns list of factor dicts with name, impact, icon, description.
+    """
+    factors = []
+    patterns = reasoning.get("similar_patterns", []) or reasoning.get("patterns_used", [])
+    context = reasoning.get("context_summary", {})
+
+    # Historical baseline (from patterns)
+    if patterns:
+        avg_pattern_covers = sum(p.get("actual_covers", 0) for p in patterns) / len(patterns)
+        baseline_diff = predicted_covers - avg_pattern_covers
+        factors.append({
+            "name": "Historical baseline",
+            "icon": "📊",
+            "value": f"{avg_pattern_covers:.0f} covers",
+            "impact": f"{baseline_diff:+.0f}",
+            "description": f"Average of {len(patterns)} similar days"
+        })
+
+    # Weather (mock for now - will come from real data)
+    weather = context.get("weather", {})
+    if weather:
+        weather_condition = weather.get("condition", "Clear")
+        weather_impact = -3 if "rain" in weather_condition.lower() else 0
+        if weather_impact != 0:
+            factors.append({
+                "name": "Weather",
+                "icon": "🌧️" if weather_impact < 0 else "☀️",
+                "value": weather_condition,
+                "impact": f"{weather_impact:+.0f}",
+                "description": "Rainy days typically reduce covers by 10%"
+            })
+
+    # Events
+    events = context.get("events", [])
+    if events:
+        factors.append({
+            "name": "Local events",
+            "icon": "🎉",
+            "value": events[0] if events else "None",
+            "impact": "+2",
+            "description": "Events nearby can increase walk-ins"
+        })
+    else:
+        factors.append({
+            "name": "Local events",
+            "icon": "📅",
+            "value": "None detected",
+            "impact": "±0",
+            "description": "No major events affecting predictions"
+        })
+
+    # Day of week pattern
+    factors.append({
+        "name": "Day pattern",
+        "icon": "📆",
+        "value": "Typical for this day",
+        "impact": "±0",
+        "description": "Based on historical patterns for this weekday"
+    })
+
+    return factors
+
+
+def get_similar_day_context(patterns: list) -> dict:
+    """
+    Get the most similar historical day for human context.
+    """
+    if not patterns:
+        return None
+
+    best = patterns[0]
+    day_of_week = best.get("day_of_week") or (best.get("metadata", {}) or {}).get("day_of_week", "")
+    return {
+        "date": best.get("date", "Unknown"),
+        "covers": best.get("actual_covers", 0),
+        "similarity": best.get("similarity", 0),
+        "day_of_week": day_of_week
+    }
+
+
+def get_contextual_recommendation(predicted: int, range_low: int, range_high: int,
+                                   breakeven: int = 35, reliability_label: str = "Monitor") -> str:
+    """
+    Generate contextual, actionable recommendation (not generic).
+    """
+    variance = range_high - range_low
+
+    # Below breakeven
+    if predicted < breakeven:
+        return f"""⚠️ **Below breakeven** ({breakeven} covers)
+
+Expected revenue may not cover costs. Consider:
+- Promotional push (social media, hotel guests)
+- Minimum staffing configuration
+- Evaluate if service should run"""
+
+    # High variance
+    if variance > 30:
+        return f"""📊 **Wide range expected** ({range_low}-{range_high} covers)
+
+Staffing strategy:
+- Schedule for {predicted} covers ({predicted // 20} servers)
+- Have 1 server on-call for flex
+- Kitchen prep for {range_high} (avoid 86s)"""
+
+    # Good prediction
+    if reliability_label == "Excellent":
+        return f"""✅ **High confidence prediction**
+
+Plan normally for {predicted} covers:
+- {max(2, predicted // 20)} servers
+- Standard prep levels
+- No special adjustments needed"""
+
+    # Default
+    return f"""💡 **Plan for {predicted} covers** (range: {range_low}-{range_high})
+
+Staffing: {max(2, predicted // 20)} servers, {max(1, predicted // 30)} kitchen
+Buffer: Consider +1 server on-call if trending up"""
 
 
 def fetch_prediction(params: dict) -> dict:
@@ -263,191 +395,280 @@ with st.sidebar:
     predict_button = st.button(button_label, type="primary", use_container_width=True)
 
 # Main content
-if predict_button:
-    if view_mode == "single":
-        # === SINGLE DAY VIEW ===
-        with st.spinner("Analyzing patterns..."):
-            try:
-                response = requests.post(
-                    f"{API_URL}/predict",
-                    json={
-                        "restaurant_id": restaurant_id,
-                        "service_date": service_date.isoformat(),
-                        "service_type": service_type
-                    },
-                    timeout=30
-                )
-                response.raise_for_status()
+if predict_button and view_mode == "single":
+    # === SINGLE DAY VIEW: Fetch prediction ===
+    with st.spinner("Analyzing patterns..."):
+        try:
+            response = requests.post(
+                f"{API_URL}/predict",
+                json={
+                    "restaurant_id": restaurant_id,
+                    "service_date": service_date.isoformat(),
+                    "service_type": service_type
+                },
+                timeout=30
+            )
+            if response.status_code == 200:
                 data = response.json()
-                
-                predicted_covers = data.get("predicted_covers", 0)
-                confidence = data.get("confidence", 0)
-                reasoning = data.get("reasoning", {})
-                staff = data.get("staff_recommendation", {})
-                accuracy = data.get("accuracy_metrics", {})
-                
-                mape = accuracy.get("estimated_mape")
-                interval = accuracy.get("prediction_interval")
-                
-                # Get reliability score
-                rel_color, rel_emoji, rel_label, rel_advice = get_reliability_score(mape)
-                
-                # Check for drift
-                drift_alert = detect_drift(confidence, mape)
-                
-                # Display drift alert if detected
-                if drift_alert:
-                    st.warning(drift_alert)
-                
-                # Main layout
-                col1, col2 = st.columns([2, 1])
-                
-                with col1:
-                    st.subheader(f"{service_date.strftime('%A, %B %d')} - {service_type.capitalize()}")
-                    
-                    # Primary metrics row
-                    metric_col1, metric_col2 = st.columns(2)
-                    
-                    with metric_col1:
-                        # Predicted covers with baseline comparison
-                        baseline = BASELINE_STATS[f"avg_daily_{service_type}"]
-                        delta = predicted_covers - baseline
-                        st.metric(
-                            label="Predicted Covers",
-                            value=f"{predicted_covers}",
-                            delta=f"{delta:+.0f} vs baseline ({baseline})",
-                            help=f"Historical baseline for {service_type}: {baseline} covers/day"
-                        )
-                        
-                        # Prediction interval (primary actionable info)
-                        if interval:
-                            st.info(f"**Expected range: {interval[0]} – {interval[1]} covers**")
-                    
-                    with metric_col2:
-                        # Reliability score (single metric replacing Confidence + MAPE)
-                        st.markdown(f"**Estimated Reliability**")
-                        st.markdown(f"### {rel_emoji} {rel_label}")
-                        if mape:
-                            st.caption(f"±{mape:.0f}% variance")
-                    
-                    # Operational advice
-                    st.success(f"**Recommendation:** {rel_advice}")
-                    
-                    st.divider()
-                    
-                    # Staff Recommendation
-                    st.subheader("Staff Recommendation")
-                    
-                    if staff and staff.get("recommended_staff"):
-                        rec_staff = staff.get("recommended_staff", {})
-                        staff_cols = st.columns(4)
-                        
-                        with staff_cols[0]:
-                            st.metric("Servers", rec_staff.get("servers", 0))
-                        with staff_cols[1]:
-                            st.metric("Hosts", rec_staff.get("hosts", 0))
-                        with staff_cols[2]:
-                            st.metric("Bussers", rec_staff.get("bussers", 0))
-                        with staff_cols[3]:
-                            st.metric("Kitchen", rec_staff.get("kitchen", 0))
-                        
-                        # Staff recommendation summary
-                        if staff.get("recommendation"):
-                            st.caption(f"{staff.get('recommendation')}")
-                    elif staff:
-                        # Fallback for old structure
-                        servers_data = staff.get("servers", {})
-                        hosts_data = staff.get("hosts", {})
-                        kitchen_data = staff.get("kitchen", {})
-                        
-                        staff_cols = st.columns(4)
-                        
-                        with staff_cols[0]:
-                            rec_servers = servers_data.get("recommended", 0) if isinstance(servers_data, dict) else 0
-                            st.metric("Servers", rec_servers)
-                        with staff_cols[1]:
-                            rec_hosts = hosts_data.get("recommended", 0) if isinstance(hosts_data, dict) else 0
-                            st.metric("Hosts", rec_hosts)
-                        with staff_cols[2]:
-                            st.metric("Bussers", 0)
-                        with staff_cols[3]:
-                            rec_kitchen = kitchen_data.get("recommended", 0) if isinstance(kitchen_data, dict) else 0
-                            st.metric("Kitchen", rec_kitchen)
-                        
-                        if staff.get("rationale"):
-                            st.caption(f"{staff.get('rationale')}")
-                
-                with col2:
-                    # Reliability gauge (based on MAPE, inverted so higher = better)
-                    reliability_value = max(0, 100 - (mape if mape else 50))
-                    
-                    fig = go.Figure(go.Indicator(
-                        mode="gauge+number",
-                        value=reliability_value,
-                        number={'suffix': '%'},
-                        domain={'x': [0, 1], 'y': [0, 1]},
-                        title={'text': "Reliability"},
-                        gauge={
-                            'axis': {'range': [0, 100]},
-                            'bar': {'color': "#667eea"},
-                            'steps': [
-                                {'range': [0, 60], 'color': "#ffcccc"},
-                                {'range': [60, 75], 'color': "#fff3cd"},
-                                {'range': [75, 85], 'color': "#d4f5d4"},
-                                {'range': [85, 100], 'color': "#28a745"}
-                            ],
-                            'threshold': {
-                                'line': {'color': "red", 'width': 2},
-                                'thickness': 0.75,
-                                'value': 75
-                            }
-                        }
-                    ))
-                    fig.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Expandable sections
-                with st.expander("Understand this prediction", expanded=False):
-                    st.markdown(EXPLAINER_CONTENT["reliability_explanation"])
-                
-                with st.expander("🔧 Model Diagnostics", expanded=False):
-                    st.markdown(EXPLAINER_CONTENT["model_diagnostics"])
-                    
-                    diag_col1, diag_col2, diag_col3 = st.columns(3)
-                    with diag_col1:
-                        st.metric("MAPE (estimated)", f"{mape:.1f}%" if mape else "N/A")
-                    with diag_col2:
-                        st.metric("Pattern Similarity", f"{confidence:.0%}" if confidence else "N/A")
-                    with diag_col3:
-                        st.metric("Patterns Analyzed", accuracy.get("patterns_analyzed", "N/A"))
-                    
-                    # Drift status
-                    if drift_alert:
-                        st.error(drift_alert)
-                    else:
-                        st.success("✅ No drift detected — model operating normally")
-                
-                with st.expander("AI Reasoning", expanded=False):
-                    explanation = reasoning.get("explanation", "") or reasoning.get("summary", "No explanation available")
-                    st.markdown(f"**Analysis:** {explanation}")
-                    
-                    # Handle both similar_patterns and patterns_used
-                    patterns = reasoning.get("similar_patterns", []) or reasoning.get("patterns_used", [])
-                    if patterns:
-                        st.markdown("**Similar Historical Patterns:**")
-                        for i, pattern in enumerate(patterns[:3], 1):
-                            if isinstance(pattern, dict):
-                                p_date = pattern.get("date", "Unknown")
-                                p_covers = pattern.get("actual_covers", "?")
-                                p_sim = pattern.get("similarity", 0)
-                                st.markdown(f"{i}. {p_date} — {p_covers} covers (similarity: {p_sim:.0%})")
-                    
-            except requests.exceptions.RequestException as e:
-                st.error(f"API Error: {str(e)}")
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-    
-    else:
+                st.session_state.prediction_data = {
+                    "prediction_id": data.get("prediction_id"),
+                    "restaurant_id": restaurant_id,
+                    "service_date": service_date.isoformat(),
+                    "service_type": service_type,
+                    "data": data
+                }
+                st.session_state.has_prediction = True
+                st.session_state.last_prediction_params = f"{service_date}_{service_type}_{restaurant_id}"
+            else:
+                st.error(f"Prediction failed: {response.text}")
+                st.session_state.has_prediction = False
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            st.session_state.has_prediction = False
+
+# Display Single Day results (persists across re-runs for Submit Feedback)
+# Clear if params changed (user picked different date/service/restaurant) - only in single mode
+if view_mode == "single":
+    current_params = f"{service_date}_{service_type}_{restaurant_id}"
+    if (st.session_state.get("last_prediction_params") and
+        st.session_state.last_prediction_params != current_params):
+        st.session_state.has_prediction = False
+        st.session_state.prediction_data = None
+
+if view_mode == "single" and st.session_state.has_prediction and st.session_state.prediction_data:
+    pred_data = st.session_state.prediction_data
+    data = pred_data["data"]
+    predicted_covers = data.get("predicted_covers", 0)
+    confidence = data.get("confidence", 0)
+    reasoning = data.get("reasoning", {})
+    staff = data.get("staff_recommendation", {})
+    accuracy = data.get("accuracy_metrics", {})
+    mape = accuracy.get("estimated_mape")
+    interval = accuracy.get("prediction_interval")
+    rel_color, rel_emoji, rel_label, rel_advice = get_reliability_score(mape)
+    drift_alert = detect_drift(confidence, mape)
+
+    if drift_alert:
+        st.warning(drift_alert)
+
+    # Main layout
+    col1, col2 = st.columns([2, 1])
+    service_date_display = datetime.strptime(pred_data["service_date"], "%Y-%m-%d").date() if isinstance(pred_data.get("service_date"), str) else pred_data.get("service_date", service_date)
+    service_type_display = pred_data.get("service_type", service_type)
+
+    with col1:
+        st.subheader(f"{service_date_display.strftime('%A, %B %d')} - {service_type_display.capitalize()}")
+
+        # Primary metrics row
+        metric_col1, metric_col2 = st.columns(2)
+
+        with metric_col1:
+            # Predicted covers with baseline comparison
+            baseline = BASELINE_STATS[f"avg_daily_{service_type_display}"]
+            delta = predicted_covers - baseline
+            st.metric(
+                label="Predicted Covers",
+                value=f"{predicted_covers}",
+                delta=f"{delta:+.0f} vs baseline ({baseline})",
+                help=f"Historical baseline for {service_type_display}: {baseline} covers/day"
+            )
+
+            # Prediction interval (primary actionable info)
+            if interval:
+                st.info(f"**Expected range: {interval[0]} – {interval[1]} covers**")
+
+        with metric_col2:
+            # Reliability score (single metric replacing Confidence + MAPE)
+            st.markdown(f"**Estimated Reliability**")
+            st.markdown(f"### {rel_emoji} {rel_label}")
+            if mape:
+                st.caption(f"±{mape:.0f}% variance")
+
+    with col2:
+        # Reliability gauge (based on MAPE, inverted so higher = better)
+        reliability_value = max(0, 100 - (mape if mape else 50))
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=reliability_value,
+            number={'suffix': '%'},
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "Reliability"},
+            gauge={
+                'axis': {'range': [0, 100]},
+                'bar': {'color': "#667eea"},
+                'steps': [
+                    {'range': [0, 60], 'color': "#ffcccc"},
+                    {'range': [60, 75], 'color': "#fff3cd"},
+                    {'range': [75, 85], 'color': "#d4f5d4"},
+                    {'range': [85, 100], 'color': "#28a745"}
+                ],
+                'threshold': {
+                    'line': {'color': "red", 'width': 2},
+                    'thickness': 0.75,
+                    'value': 75
+                }
+            }
+        ))
+        fig.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Factor breakdown (Why this prediction?)
+    st.divider()
+    with st.expander("💭 Why this prediction?", expanded=True):
+        factors = get_factor_breakdown(reasoning, predicted_covers)
+        for factor in factors:
+            col_icon, col_name, col_impact = st.columns([0.5, 3, 1])
+            with col_icon:
+                st.write(factor["icon"])
+            with col_name:
+                st.write(f"**{factor['name']}**: {factor['value']}")
+                st.caption(factor["description"])
+            with col_impact:
+                st.write(f"**{factor['impact']}**")
+
+        patterns = reasoning.get("similar_patterns", []) or reasoning.get("patterns_used", [])
+        similar_day = get_similar_day_context(patterns)
+        if similar_day:
+            st.info(f"📆 **Most similar past day:** {similar_day['date']} — {similar_day['covers']} covers ({similar_day['similarity']:.0%} match)")
+
+    # Contextual recommendation
+    breakeven = BASELINE_STATS.get("breakeven_covers", 35)
+    contextual_reco = get_contextual_recommendation(
+        predicted_covers,
+        interval[0] if interval else predicted_covers - 10,
+        interval[1] if interval else predicted_covers + 10,
+        breakeven,
+        rel_label
+    )
+    st.markdown(contextual_reco)
+
+    st.divider()
+
+    # Pre-service validation question
+    st.subheader("❓ Does this look right?")
+    validation = st.radio(
+        "Your assessment:",
+        options=["accurate", "higher", "lower"],
+        format_func=lambda x: {
+            "accurate": f"✓ Yes, {predicted_covers} covers looks accurate",
+            "higher": "↑ I expect it to be higher",
+            "lower": "↓ I expect it to be lower"
+        }[x],
+        horizontal=True,
+        key="pre_validation"
+    )
+
+    selected_reasons = []
+    adjusted = None
+    if validation in ["higher", "lower"]:
+        reason_options = [
+            "High booking pace today",
+            "Special event/promotion",
+            "Weather change expected",
+            "Group reservation",
+            "Holiday period",
+            "Other"
+        ]
+        selected_reasons = st.multiselect(
+            "What makes you think so?",
+            options=reason_options,
+            key="pre_reasons"
+        )
+        adjusted = st.number_input(
+            "Your estimate:",
+            min_value=0,
+            max_value=300,
+            value=predicted_covers + (10 if validation == "higher" else -10),
+            key="adjusted_covers"
+        )
+
+    if st.button("Submit Feedback", key="pre_feedback_btn"):
+        feedback_payload = {
+            "prediction_id": pred_data["prediction_id"],
+            "restaurant_id": pred_data["restaurant_id"],
+            "feedback_type": "pre_service",
+            "pre_validation": validation,
+            "pre_reasons": selected_reasons,
+            "pre_adjusted_covers": adjusted if validation in ["higher", "lower"] else None
+        }
+        try:
+            feedback_response = requests.post(f"{API_URL}/api/feedback", json=feedback_payload, timeout=10)
+            if feedback_response.status_code == 200:
+                st.success("✓ Thanks! Your feedback helps improve predictions.")
+            else:
+                st.error(f"Failed to submit feedback: {feedback_response.text}")
+        except Exception as e:
+            st.error(f"Failed to submit feedback: {str(e)}")
+
+    st.divider()
+
+    # Staff Recommendation
+    st.subheader("Staff Recommendation")
+
+    if staff and staff.get("recommended_staff"):
+        rec_staff = staff.get("recommended_staff", {})
+        staff_cols = st.columns(4)
+        with staff_cols[0]:
+            st.metric("Servers", rec_staff.get("servers", 0))
+        with staff_cols[1]:
+            st.metric("Hosts", rec_staff.get("hosts", 0))
+        with staff_cols[2]:
+            st.metric("Bussers", rec_staff.get("bussers", 0))
+        with staff_cols[3]:
+            st.metric("Kitchen", rec_staff.get("kitchen", 0))
+        if staff.get("recommendation"):
+            st.caption(f"{staff.get('recommendation')}")
+    elif staff:
+        servers_data = staff.get("servers", {})
+        hosts_data = staff.get("hosts", {})
+        kitchen_data = staff.get("kitchen", {})
+        staff_cols = st.columns(4)
+        with staff_cols[0]:
+            rec_servers = servers_data.get("recommended", 0) if isinstance(servers_data, dict) else 0
+            st.metric("Servers", rec_servers)
+        with staff_cols[1]:
+            rec_hosts = hosts_data.get("recommended", 0) if isinstance(hosts_data, dict) else 0
+            st.metric("Hosts", rec_hosts)
+        with staff_cols[2]:
+            st.metric("Bussers", 0)
+        with staff_cols[3]:
+            rec_kitchen = kitchen_data.get("recommended", 0) if isinstance(kitchen_data, dict) else 0
+            st.metric("Kitchen", rec_kitchen)
+        if staff.get("rationale"):
+            st.caption(f"{staff.get('rationale')}")
+
+    # Expandable sections
+    with st.expander("Understand this prediction", expanded=False):
+        st.markdown(EXPLAINER_CONTENT["reliability_explanation"])
+
+    with st.expander("🔧 Model Diagnostics", expanded=False):
+        st.markdown(EXPLAINER_CONTENT["model_diagnostics"])
+        diag_col1, diag_col2, diag_col3 = st.columns(3)
+        with diag_col1:
+            st.metric("MAPE (estimated)", f"{mape:.1f}%" if mape else "N/A")
+        with diag_col2:
+            st.metric("Pattern Similarity", f"{confidence:.0%}" if confidence else "N/A")
+        with diag_col3:
+            st.metric("Patterns Analyzed", accuracy.get("patterns_analyzed", "N/A"))
+        if drift_alert:
+            st.error(drift_alert)
+        else:
+            st.success("✅ No drift detected — model operating normally")
+
+    with st.expander("AI Reasoning", expanded=False):
+        explanation = reasoning.get("explanation", "") or reasoning.get("summary", "No explanation available")
+        st.markdown(f"**Analysis:** {explanation}")
+        patterns = reasoning.get("similar_patterns", []) or reasoning.get("patterns_used", [])
+        if patterns:
+            st.markdown("**Similar Historical Patterns:**")
+            for i, pattern in enumerate(patterns[:3], 1):
+                if isinstance(pattern, dict):
+                    p_date = pattern.get("date", "Unknown")
+                    p_covers = pattern.get("actual_covers", "?")
+                    p_sim = pattern.get("similarity", 0)
+                    st.markdown(f"{i}. {p_date} — {p_covers} covers (similarity: {p_sim:.0%})")
+
+elif predict_button and view_mode != "single":
         # === WEEKLY VIEW ===
         if not service_types:
             st.error("Please select at least one service type")
