@@ -419,6 +419,9 @@ if predict_button and view_mode == "single":
                 }
                 st.session_state.has_prediction = True
                 st.session_state.last_prediction_params = f"{service_date}_{service_type}_{restaurant_id}"
+                # Reset post-service state when new prediction
+                st.session_state.post_service_submitted = False
+                st.session_state.post_service_result = None
             else:
                 st.error(f"Prediction failed: {response.text}")
                 st.session_state.has_prediction = False
@@ -596,9 +599,127 @@ if view_mode == "single" and st.session_state.has_prediction and st.session_stat
             if feedback_response.status_code == 200:
                 st.success("✓ Thanks! Your feedback helps improve predictions.")
             else:
-                st.error(f"Failed to submit feedback: {feedback_response.text}")
+                err_text = feedback_response.text
+                try:
+                    err_detail = feedback_response.json().get("detail", err_text)
+                except Exception:
+                    err_detail = err_text
+                if "Prediction was not stored" in str(err_detail) or "Supabase" in str(err_detail):
+                    st.error("La prédiction n'a pas été sauvegardée. Vérifiez que SUPABASE_URL et SUPABASE_KEY sont configurés dans le Space Hugging Face. Relancez une prédiction après configuration.")
+                else:
+                    st.error(f"Failed to submit feedback: {err_detail}")
         except Exception as e:
             st.error(f"Failed to submit feedback: {str(e)}")
+
+    st.divider()
+
+    # ============================================
+    # POST-SERVICE FEEDBACK SECTION
+    # ============================================
+
+    if not st.session_state.post_service_submitted:
+        st.markdown("### ✅ Post-Service: How did it go?")
+        st.caption("Enter actual results after the service to track accuracy. Your feedback feeds a continuous learning loop: the agent compares predictions with actual results to improve over time. Longer-term, a semantic layer will automate this so the system keeps improving with minimal manager input.")
+
+        range_low = interval[0] if interval else predicted_covers - 10
+        range_high = interval[1] if interval else predicted_covers + 10
+
+        col_recap, col_input = st.columns([1, 1])
+        with col_recap:
+            st.markdown("**📊 Prediction Recap**")
+            st.markdown(f"- Date: **{service_date_display.strftime('%A, %B %d')}** | Service: **{service_type_display.capitalize()}**")
+            st.markdown(f"- Predicted: **{predicted_covers}** covers")
+            st.markdown(f"- Expected range: {range_low} – {range_high}")
+
+        with col_input:
+            st.markdown("**❓ Actual Results**")
+            actual_covers = st.number_input(
+                "Actual covers",
+                min_value=0,
+                max_value=500,
+                value=0,
+                key="actual_covers_input",
+                help="How many covers did you actually serve?"
+            )
+
+        st.markdown("**👥 Staff Used** (optional)")
+        col_foh, col_boh = st.columns(2)
+        with col_foh:
+            staff_foh = st.number_input(
+                "FOH (servers, hosts)",
+                min_value=0,
+                max_value=50,
+                value=0,
+                key="staff_foh_input"
+            )
+        with col_boh:
+            staff_boh = st.number_input(
+                "BOH (kitchen)",
+                min_value=0,
+                max_value=50,
+                value=0,
+                key="staff_boh_input"
+            )
+
+        notes = st.text_area(
+            "💬 Notes (optional)",
+            placeholder="Any context? Special events, weather issues, no-shows...",
+            key="post_service_notes",
+            height=80
+        )
+
+        if st.button("Submit Post-Service Feedback", key="submit_post_service_btn", type="primary"):
+            if actual_covers == 0:
+                st.warning("Please enter the actual number of covers")
+            else:
+                post_feedback_payload = {
+                    "prediction_id": pred_data["prediction_id"],
+                    "restaurant_id": pred_data["restaurant_id"],
+                    "feedback_type": "post_service",
+                    "actual_covers": actual_covers,
+                    "staff_foh_used": staff_foh if staff_foh > 0 else None,
+                    "staff_boh_used": staff_boh if staff_boh > 0 else None,
+                    "notes": notes.strip() or None
+                }
+                try:
+                    response = requests.post(
+                        f"{API_URL}/api/feedback",
+                        json=post_feedback_payload,
+                        timeout=10
+                    )
+                    if response.status_code == 200:
+                        error = abs(predicted_covers - actual_covers)
+                        accuracy_pct = round((1 - error / actual_covers) * 100, 1) if actual_covers > 0 else 0
+                        within_range = range_low <= actual_covers <= range_high
+                        st.session_state.post_service_submitted = True
+                        st.session_state.post_service_result = {
+                            "predicted": predicted_covers,
+                            "actual": actual_covers,
+                            "accuracy_pct": accuracy_pct,
+                            "within_range": within_range
+                        }
+                        st.rerun()
+                    else:
+                        st.error(f"Failed to submit: {response.text}")
+                except Exception as e:
+                    st.error(f"Error: {e}")
+
+    if st.session_state.post_service_submitted and st.session_state.post_service_result:
+        result = st.session_state.post_service_result
+        st.success("✅ **Thanks! Here's how the prediction performed:**")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Predicted", f"{result['predicted']} covers")
+        with col2:
+            st.metric("Actual", f"{result['actual']} covers")
+        with col3:
+            range_icon = "✅" if result["within_range"] else "⚠️"
+            st.metric("Accuracy", f"{result['accuracy_pct']}% {range_icon}")
+        if result["within_range"]:
+            st.info("📊 Within expected range — prediction was reliable!")
+        else:
+            st.warning("📊 Outside expected range — I'll learn from this difference.")
+        st.caption("This feedback helps me improve future predictions!")
 
     st.divider()
 
