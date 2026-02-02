@@ -43,6 +43,8 @@ VARIABLES = {
     "QDRANT_API_KEY": os.getenv("QDRANT_API_KEY"),
     "MISTRAL_API_KEY": os.getenv("MISTRAL_API_KEY"),
     "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
+    "SUPABASE_URL": os.getenv("SUPABASE_URL"),
+    "SUPABASE_KEY": os.getenv("SUPABASE_KEY"),
 }
 
 def setup_secrets():

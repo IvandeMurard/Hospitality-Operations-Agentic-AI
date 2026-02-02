@@ -21,6 +21,16 @@ def get_supabase() -> Client:
     key = os.environ.get("SUPABASE_KEY")
     if not url or not key:
         raise HTTPException(500, "Supabase not configured")
+    
+    # Workaround for SSL certificate issues on Windows (local dev only)
+    # Set SUPABASE_SSL_VERIFY=false in .env to disable SSL verification
+    ssl_verify = os.environ.get("SUPABASE_SSL_VERIFY", "true").lower() not in ("false", "0", "no")
+    
+    if not ssl_verify:
+        import ssl
+        # Disable SSL verification globally (local dev only!)
+        ssl._create_default_https_context = ssl._create_unverified_context
+    
     return create_client(url, key)
 
 # ============================================
