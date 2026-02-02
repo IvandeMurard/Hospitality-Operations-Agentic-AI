@@ -1,0 +1,47 @@
+{
+    "nav": {
+        "forecast": "Prévisions",
+        "history": "Historique",
+        "settings": "Paramètres"
+    },
+    "sidebar": {
+        "restaurant": "Restaurant",
+        "service": "Service"
+    },
+    "header": {
+        "day": "Jour",
+        "week": "Semaine",
+        "month": "Mois",
+        "today": "Aujourd'hui"
+    },
+    "kpi": {
+        "covers": "Couverts",
+        "range": "Fourchette",
+        "staff": "Personnel",
+        "confidence": "Fiabilité"
+    },
+    "confidence": {
+        "high": "Élevée",
+        "medium": "Moyenne",
+        "low": "Faible"
+    },
+    "factors": {
+        "title": "Pourquoi cette prévision ?",
+        "baseline": "Base historique",
+        "occupancy": "Occupation hôtel",
+        "events": "Événements locaux",
+        "weather": "Météo",
+        "similar_day": "Jour le plus similaire"
+    },
+    "feedback": {
+        "title": "Votre évaluation",
+        "question": "{covers} couverts, ça vous semble correct pour le {service} de {day} ?",
+        "accurate": "Oui, ça semble correct",
+        "higher": "J'attends plus",
+        "lower": "J'attends moins",
+        "confirm": "Confirmer",
+        "post_title": "Comment ça s'est passé ?",
+        "actual": "Couverts réels",
+        "submit": "Envoyer"
+    }
+}
