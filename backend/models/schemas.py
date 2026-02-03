@@ -112,4 +112,5 @@ class PredictionResponse(BaseModel):
     reasoning: Reasoning
     staff_recommendation: StaffRecommendation
     accuracy_metrics: Optional[AccuracyMetrics] = None
+    restaurant_context: Optional[dict] = None  # total_seats, breakeven_covers, target_covers, capacity_pct
     created_at: str

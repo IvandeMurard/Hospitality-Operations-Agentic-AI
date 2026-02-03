@@ -89,7 +89,10 @@ app.add_middleware(
 
 # F&B Agent API routes (restaurant profile, predictions, feedback)
 from backend.api.routes import router as api_router
+from backend.api.restaurant_profile_routes import router as restaurant_profile_router
+
 app.include_router(api_router)
+app.include_router(restaurant_profile_router)
 
 @app.get("/")
 async def root():
@@ -121,6 +124,8 @@ async def test_qdrant():
 # ============================================
 # PHASE 1: Prediction Endpoints
 # ============================================
+
+import math
 
 from backend.models.schemas import (
     PredictionRequest,
@@ -189,7 +194,72 @@ async def create_prediction(request: PredictionRequest):
             rationale=staff_data.get("rationale", ""),
             covers_per_staff=staff_data.get("covers_per_staff", 0.0)
         )
-        
+        restaurant_context = None
+
+        # Enrich with restaurant profile when available (IVA-52)
+        try:
+            from backend.api.routes import get_supabase
+            supabase = get_supabase()
+            profile_resp = (
+                supabase.table("restaurant_profiles")
+                .select("*")
+                .eq("outlet_name", request.restaurant_id)
+                .limit(1)
+                .execute()
+            )
+            if profile_resp.data and len(profile_resp.data) > 0:
+                profile = profile_resp.data[0]
+                predicted = result["predicted_covers"]
+                turns_dinner = profile.get("turns_dinner", 2.0)
+                total_seats = profile["total_seats"]
+                capacity_pct = round(
+                    (predicted / (total_seats * turns_dinner)) * 100, 1
+                )
+                restaurant_context = {
+                    "total_seats": total_seats,
+                    "breakeven_covers": profile.get("breakeven_covers"),
+                    "target_covers": profile.get("target_covers"),
+                    "capacity_pct": capacity_pct,
+                }
+                # Override staff recommendation with profile-based calculation
+                servers_rec = max(
+                    math.ceil(predicted / profile["covers_per_server"]),
+                    profile.get("min_foh_staff", 2),
+                )
+                hosts_rec = max(
+                    math.ceil(predicted / profile["covers_per_host"]),
+                    1,
+                )
+                kitchen_rec = max(
+                    math.ceil(predicted / profile["covers_per_kitchen"]),
+                    profile.get("min_boh_staff", 2),
+                )
+                staff_recommendation = StaffRecommendation(
+                    servers=StaffDelta(
+                        recommended=servers_rec,
+                        usual=servers_rec,
+                        delta=0,
+                    ),
+                    hosts=StaffDelta(
+                        recommended=hosts_rec,
+                        usual=hosts_rec,
+                        delta=0,
+                    ),
+                    kitchen=StaffDelta(
+                        recommended=kitchen_rec,
+                        usual=kitchen_rec,
+                        delta=0,
+                    ),
+                    rationale=staff_data.get("rationale", ""),
+                    covers_per_staff=round(
+                        predicted / (servers_rec + hosts_rec + kitchen_rec), 1
+                    )
+                    if (servers_rec + hosts_rec + kitchen_rec) > 0
+                    else 0.0,
+                )
+        except Exception as e:
+            logger.debug(f"[PREDICT] No restaurant profile for {request.restaurant_id}: {e}")
+
         # Extract accuracy_metrics from result
         accuracy_data = result.get("accuracy_metrics", {})
         accuracy_metrics = None
@@ -251,6 +321,7 @@ async def create_prediction(request: PredictionRequest):
             reasoning=reasoning,
             staff_recommendation=staff_recommendation,
             accuracy_metrics=accuracy_metrics,
+            restaurant_context=restaurant_context,
             created_at=datetime.now(timezone.utc).isoformat()
         )
         
