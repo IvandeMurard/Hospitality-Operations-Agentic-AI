@@ -45,7 +45,7 @@ def fetch_prediction(date: datetime, restaurant: str, service: str) -> dict:
                 "service_type": service.lower(),
                 "restaurant_id": restaurant_id
             },
-            timeout=10
+            timeout=60
         )
         if response.status_code == 200:
             return response.json()
@@ -54,7 +54,10 @@ def fetch_prediction(date: datetime, restaurant: str, service: str) -> dict:
     except requests.exceptions.ConnectionError:
         st.error("Unable to connect to backend API. Please ensure the backend is running.")
     except requests.exceptions.Timeout:
-        st.error("Backend API request timed out.")
+        st.error(
+            "Backend API request timed out. The first prediction can take up to a minute "
+            "(embedding + Qdrant + Claude). Try again or check backend logs."
+        )
     except Exception as e:
         st.error(f"Prediction error: {e}")
     return None
