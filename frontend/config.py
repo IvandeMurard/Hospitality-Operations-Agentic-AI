@@ -1,6 +1,10 @@
 """Aetherix Design System Configuration"""
 
+import os
 from pathlib import Path
+
+# API
+API_BASE = os.environ.get("AETHERIX_API_BASE", "http://localhost:8000")
 
 # Brand
 BRAND_NAME = "Aetherix"

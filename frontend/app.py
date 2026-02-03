@@ -79,5 +79,6 @@ elif context["page"] == "history":
     st.info("History page will be implemented in Phase 5")
 
 elif context["page"] == "settings":
-    st.title("Settings")
-    st.info("Settings page will be implemented in Phase 6")
+    from pages.settings import render_settings_page
+
+    render_settings_page(lang=context["language"])
