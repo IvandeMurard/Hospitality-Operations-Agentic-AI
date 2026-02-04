@@ -38,7 +38,14 @@ def render_feedback_panel(
     if view != "day":
         return
 
-    if not prediction_id or prediction_id.startswith("pred_"):
+    if not prediction_id:
+        msg = get_text("feedback.no_prediction", lang)
+    elif prediction_id.startswith("pred_"):
+        msg = get_text("feedback.storage_failed", lang)
+    else:
+        msg = None
+
+    if msg:
         st.markdown(
             f"""
             <div style="
@@ -49,7 +56,7 @@ def render_feedback_panel(
                 text-align: center;
                 color: #6C757D;
             ">
-                {get_text("feedback.no_prediction", lang)}
+                {msg}
             </div>
         """,
             unsafe_allow_html=True,

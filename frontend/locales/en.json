@@ -14,7 +14,22 @@
         "month": "Month",
         "today": "Today",
         "previous": "← Previous",
-        "next": "Next →"
+        "next": "Next →",
+        "select_date": "Select date"
+    },
+    "chart": {
+        "week_forecast": "Weekly Forecast",
+        "covers": "Covers"
+    },
+    "week": {
+        "no_data": "No predictions available for this week"
+    },
+    "month": {
+        "no_data": "No predictions available for this month"
+    },
+    "loading": {
+        "week": "Loading week forecast...",
+        "month": "Loading month forecast..."
     },
     "welcome": {
         "title": "Welcome to Aetherix",
@@ -63,6 +78,7 @@
     "feedback": {
         "title": "Your assessment",
         "no_prediction": "Generate a forecast to provide feedback",
+        "storage_failed": "Feedback unavailable: prediction was not saved. Check backend Supabase configuration.",
         "pre_title": "Your Assessment",
         "pre_question": "Does {covers} covers look right for {day} {service}?",
         "accurate": "Looks accurate",

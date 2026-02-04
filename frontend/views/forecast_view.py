@@ -370,7 +370,7 @@ def render_forecast_view(context: dict) -> None:
         _render_kpi_cards_week(lang, week_predictions or [])
     else:
         month_predictions = None
-        with st.spinner("Loading month forecast..."):
+        with st.spinner(get_text("loading.month", lang)):
             month_predictions = get_month_predictions(
                 selected_date.year,
                 selected_date.month,
@@ -396,14 +396,15 @@ def render_forecast_view(context: dict) -> None:
                 predictions=week_predictions,
                 selected_date=selected_date,
                 baseline=baseline,
+                lang=lang,
             )
         else:
-            st.info("No week data available")
+            st.info(get_text("week.no_data", lang))
     elif view == "month":
         if month_predictions:
             render_month_chart_from_data(month_predictions)
         else:
-            st.info("Monthly view: load failed or batch API not available.")
+            st.info(get_text("month.no_data", lang))
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -414,7 +415,7 @@ def render_forecast_view(context: dict) -> None:
 
     # Feedback panel (pre-service / post-service)
     render_feedback_panel(
-        prediction_id=prediction.get("prediction_id") if prediction else None,
+        prediction_id=(prediction or {}).get("prediction_id"),
         predicted_covers=prediction.get("predicted_covers", 0) if prediction else 0,
         date=header["selected_date"],
         service=context["service"],
