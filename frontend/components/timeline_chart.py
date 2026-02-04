@@ -9,8 +9,10 @@ import requests
 from config import API_BASE
 
 
-def render_day_hero(prediction: dict, date: datetime) -> None:
+def render_day_hero(prediction: dict, date: datetime, lang: str = "en") -> None:
     """Render day view as prominent hero card instead of bar chart."""
+    from config import get_text
+
     if not prediction:
         st.warning("No prediction available for this date")
         return
@@ -24,14 +26,18 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
     confidence_pct = int(confidence * 100)
 
     if confidence_pct >= 85:
-        conf_label = "High"
+        conf_label = get_text("confidence.high", lang)
         conf_color = "#40916C"
     elif confidence_pct >= 70:
-        conf_label = "Medium"
+        conf_label = get_text("confidence.medium", lang)
         conf_color = "#E9C46A"
     else:
-        conf_label = "Low"
+        conf_label = get_text("confidence.low", lang)
         conf_color = "#E76F51"
+
+    expected_label = get_text("hero.expected_covers", lang)
+    range_label = get_text("hero.range", lang)
+    conf_header = get_text("hero.confidence", lang)
 
     st.html(
         f"""<div style="
@@ -61,7 +67,7 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
                 color: rgba(255,255,255,0.8);
                 font-size: 1.125rem;
                 margin-bottom: 1.5rem;
-            ">expected covers</p>
+            ">{expected_label}</p>
 
             <div style="
                 display: flex;
@@ -70,13 +76,13 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
                 margin-top: 1rem;
             ">
                 <div>
-                    <p style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin: 0;">Range</p>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin: 0;">{range_label}</p>
                     <p style="color: #FFFFFF; font-size: 1.25rem; font-weight: 600; margin: 0.25rem 0 0 0;">
                         {range_low} – {range_high}
                     </p>
                 </div>
                 <div>
-                    <p style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin: 0;">Confidence</p>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin: 0;">{conf_header}</p>
                     <p style="color: {conf_color}; font-size: 1.25rem; font-weight: 600; margin: 0.25rem 0 0 0;">
                         {conf_label}
                     </p>
