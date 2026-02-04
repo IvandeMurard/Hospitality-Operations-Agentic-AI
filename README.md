@@ -18,7 +18,7 @@ Restaurant managers spend **5–8 hours/week** on manual forecasting with ~**70%
 
 ### Solution: Ambient AI Colleague
 An agent that:
-- **Anticipates** demand (covers, staffing, purchases) using RAG + external signals (weather, events, holidays)
+- **Anticipates** demand (covers, staffing, purchases) using RAG + external signals (weather, events, holidays, real-time social sentiment)
 - **Explains** its predictions (impact %, confidence score)
 - **Learns** from your corrections (feedback loop → accuracy improves over time)
 - **Delivers where you work**: WhatsApp/Slack for daily briefs, dashboard for config & deep dive
@@ -84,9 +84,9 @@ An agent that:
 
 - ✅ Phase 1: Backend API + agents (Q3 2025)
 - ✅ Phase 2: RAG + 495 patterns (Q4 2025)
-- 🚧 Phase 3: Dashboard + feedback loop (ongoing – Streamlit live)
-- □ Phase 4: Semantic layer + real PMS (Mews first)
-- □ Phase 5: Full ambient delivery (proactive WhatsApp, voice)
+- 🚧 Phase 3: Dashboard + feedback loop (ongoing, the Streamlit prototype is live - shipping very early!)
+- □ Phase 4: Semantic layer + real PMS (Open to partnerships!)
+- □ Phase 5: Full ambient delivery (proactive WhatsApp, voice, NLP)
 
 ### Try It Now
 
