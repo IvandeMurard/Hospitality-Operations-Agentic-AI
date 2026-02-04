@@ -6,13 +6,11 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import requests
 
-from config import API_BASE
+from config import API_BASE, get_text
 
 
 def render_day_hero(prediction: dict, date: datetime, lang: str = "en") -> None:
     """Render day view as prominent hero card instead of bar chart."""
-    from config import get_text
-
     if not prediction:
         st.warning("No prediction available for this date")
         return
@@ -102,6 +100,31 @@ def _restaurant_to_id(restaurant: str) -> str:
     return restaurant_map.get(restaurant, restaurant.lower().replace(" ", "_"))
 
 
+def _normalize_prediction(p: dict, dates: list, start_date: datetime, i: int) -> dict:
+    """Normalize a single prediction from API response. Returns None if invalid."""
+    date_str = p.get("date") or p.get("service_date") or (dates[i] if i < len(dates) else "")
+    if hasattr(date_str, "isoformat"):
+        date_str = date_str.isoformat() if hasattr(date_str, "date") else str(date_str)
+    date_str = str(date_str).replace("Z", "").split("T")[0] if date_str else ""
+    try:
+        dt = datetime.fromisoformat(date_str) if date_str else start_date + timedelta(days=i)
+    except (ValueError, TypeError):
+        dt = start_date + timedelta(days=i)
+    covers = p.get("predicted_covers") if p.get("predicted_covers") is not None else p.get("covers", 0)
+    metrics = p.get("accuracy_metrics") or {}
+    interval = metrics.get("prediction_interval") or [0, 0]
+    range_low = interval[0] if len(interval) >= 1 else 0
+    range_high = interval[1] if len(interval) >= 2 else 0
+    return {
+        "date": dt,
+        "day": dt.strftime("%a"),
+        "covers": int(covers) if covers is not None else 0,
+        "range_low": range_low,
+        "range_high": range_high,
+        "confidence": p.get("confidence") or p.get("confidence_score") or 0,
+    }
+
+
 def get_week_predictions(
     start_date: datetime, restaurant: str, service: str
 ) -> List[Dict]:
@@ -120,45 +143,43 @@ def get_week_predictions(
                 "service_type": service_type,
                 "restaurant_id": restaurant_id,
             },
-            timeout=90,
+            timeout=120,
         )
-        if response.status_code == 200:
-            data = response.json()
-            raw = data.get("predictions") or []
-            predictions = []
-            for i, p in enumerate(raw):
-                date_str = p.get("date") or p.get("service_date") or dates[i]
-                try:
-                    dt = datetime.fromisoformat(str(date_str))
-                except (ValueError, TypeError):
-                    dt = start_date + timedelta(days=i)
-                metrics = p.get("accuracy_metrics") or {}
-                interval = metrics.get("prediction_interval") or [0, 0]
-                range_low = interval[0] if len(interval) >= 1 else 0
-                range_high = interval[1] if len(interval) >= 2 else 0
+        if response.status_code != 200:
+            st.error(f"Week forecast API returned {response.status_code}. Check backend.")
+            return []
+        data = response.json()
+        raw = data if isinstance(data, list) else (data.get("predictions") or [])
+        predictions = []
+        for i, p in enumerate(raw):
+            if not isinstance(p, dict):
+                continue
+            norm = _normalize_prediction(p, dates, start_date, i)
+            if norm:
+                predictions.append(norm)
+        if len(predictions) < 7:
+            for i in range(len(predictions), 7):
+                dt = start_date + timedelta(days=i)
                 predictions.append({
                     "date": dt,
                     "day": dt.strftime("%a"),
-                    "covers": p.get("predicted_covers", 0),
-                    "range_low": range_low,
-                    "range_high": range_high,
-                    "confidence": p.get("confidence", 0),
+                    "covers": 0,
+                    "range_low": 0,
+                    "range_high": 0,
+                    "confidence": 0,
                 })
-            return predictions
-    except Exception:
-        pass
-    # Fallback: return empty week
-    return [
-        {
-            "date": start_date + timedelta(days=i),
-            "day": (start_date + timedelta(days=i)).strftime("%a"),
-            "covers": 0,
-            "range_low": 0,
-            "range_high": 0,
-            "confidence": 0,
-        }
-        for i in range(7)
-    ]
+        return predictions[:7]
+    except requests.exceptions.ConnectionError:
+        st.error("Unable to connect to backend API. Please ensure the backend is running.")
+        return []
+    except requests.exceptions.Timeout:
+        st.error(
+            "Batch API request timed out. Week forecast can take up to 2 minutes. Try again."
+        )
+        return []
+    except Exception as e:
+        st.error(f"Failed to load week predictions: {e}")
+        return []
 
 
 def get_month_predictions(
@@ -182,22 +203,46 @@ def get_month_predictions(
             },
             timeout=120,
         )
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("predictions") or []
-    except Exception:
-        pass
-    return None
+        if response.status_code != 200:
+            st.error(f"Month forecast API returned {response.status_code}. Check backend.")
+            return None
+        data = response.json()
+        raw = data if isinstance(data, list) else (data.get("predictions") or [])
+        start_date = datetime(year, month, 1)
+        normalized = []
+        for i, p in enumerate(raw):
+            if not isinstance(p, dict):
+                continue
+            norm = _normalize_prediction(p, dates, start_date, i)
+            if norm:
+                normalized.append({
+                    "date": p.get("date") or p.get("service_date") or dates[i],
+                    "predicted_covers": norm["covers"],
+                    "confidence": norm["confidence"],
+                })
+        return normalized if normalized else None
+    except requests.exceptions.ConnectionError:
+        st.error("Unable to connect to backend API. Please ensure the backend is running.")
+        return None
+    except requests.exceptions.Timeout:
+        st.error(
+            "Month forecast request timed out. Loading 28–31 days can take several minutes."
+        )
+        return None
+    except Exception as e:
+        st.error(f"Failed to load month predictions: {e}")
+        return None
 
 
 def render_week_chart(
     predictions: List[Dict],
     selected_date: Optional[datetime] = None,
     baseline: Optional[float] = None,
+    lang: str = "en",
 ) -> None:
     """Render Apollo-style weekly bar chart."""
     if not predictions:
-        st.info("No prediction data available")
+        st.info(get_text("week.no_data", lang))
         return
 
     days = [p["day"] for p in predictions]

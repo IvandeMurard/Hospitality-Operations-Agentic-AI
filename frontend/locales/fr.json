@@ -14,7 +14,22 @@
         "month": "Mois",
         "today": "Aujourd'hui",
         "previous": "← Précédent",
-        "next": "Suivant →"
+        "next": "Suivant →",
+        "select_date": "Sélectionner une date"
+    },
+    "chart": {
+        "week_forecast": "Prévisions de la semaine",
+        "covers": "Couverts"
+    },
+    "week": {
+        "no_data": "Aucune prévision disponible pour cette semaine"
+    },
+    "month": {
+        "no_data": "Aucune prévision disponible pour ce mois"
+    },
+    "loading": {
+        "week": "Chargement des prévisions de la semaine...",
+        "month": "Chargement des prévisions du mois..."
     },
     "welcome": {
         "title": "Bienvenue sur Aetherix",
@@ -63,6 +78,7 @@
     "feedback": {
         "title": "Votre évaluation",
         "no_prediction": "Générez une prévision pour donner votre avis",
+        "storage_failed": "Feedback indisponible : la prévision n'a pas été enregistrée. Vérifiez la configuration Supabase du backend.",
         "pre_title": "Votre évaluation",
         "pre_question": "{covers} couverts pour le {service} de {day}, ça vous semble juste ?",
         "accurate": "Ça semble correct",

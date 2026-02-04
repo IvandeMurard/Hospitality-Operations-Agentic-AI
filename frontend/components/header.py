@@ -1,7 +1,7 @@
 """Aetherix Header Component"""
 
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from config import get_text
 
 
@@ -26,6 +26,11 @@ def _navigate_period(direction: int, view: str) -> None:
     # Mark that user has requested a forecast
     st.session_state.forecast_requested = True
     st.rerun()
+
+
+def _to_datetime(d: date) -> datetime:
+    """Convert date to datetime (midnight)."""
+    return datetime.combine(d, datetime.min.time())
 
 
 def render_header(lang: str = "en") -> dict:
@@ -71,31 +76,74 @@ def render_header(lang: str = "en") -> dict:
                 _navigate_period(-1, view)
 
         with subcol2:
-            # Display current period
-            if view == "day":
-                period_label = st.session_state.selected_date.strftime(
-                    "%A, %B %d, %Y"
-                )
-            elif view == "week":
-                week_start = st.session_state.selected_date - timedelta(
-                    days=st.session_state.selected_date.weekday()
-                )
-                period_label = f"Week of {week_start.strftime('%B %d, %Y')}"
-            else:
-                period_label = st.session_state.selected_date.strftime(
-                    "%B %Y"
-                )
+            current = st.session_state.selected_date
+            current_date = current.date() if hasattr(current, "date") else current
 
-            st.markdown(
-                f"""
-                <div style="text-align: center; padding: 0.5rem 0;">
-                    <span style="font-size: 1.125rem; font-weight: 500; color: #212529;">
-                        {period_label}
-                    </span>
-                </div>
-            """,
-                unsafe_allow_html=True,
-            )
+            if view == "day":
+                picker = st.date_input(
+                    get_text("header.select_date", lang),
+                    value=current_date,
+                    label_visibility="collapsed",
+                    key="date_picker_day",
+                )
+                if picker != current_date:
+                    st.session_state.selected_date = _to_datetime(picker)
+                    st.session_state.forecast_requested = True
+                    st.rerun()
+            elif view == "week":
+                week_start = current - timedelta(days=current.weekday())
+                picker = st.date_input(
+                    get_text("header.select_date", lang),
+                    value=week_start.date() if hasattr(week_start, "date") else week_start,
+                    label_visibility="collapsed",
+                    key="date_picker_week",
+                )
+                new_week_start = picker - timedelta(days=picker.weekday())
+                if new_week_start != (week_start.date() if hasattr(week_start, "date") else week_start):
+                    st.session_state.selected_date = _to_datetime(new_week_start)
+                    st.session_state.forecast_requested = True
+                    st.rerun()
+            else:
+                # Month view: month + year selectboxes
+                months_en = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December",
+                ]
+                months_fr = [
+                    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+                    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+                ]
+                months = months_fr if lang == "fr" else months_en
+                current_year = date.today().year
+                years = list(range(current_year - 2, current_year + 3))
+                month_1 = current.month - 1
+                year_idx = current.year - years[0] if years and current.year in years else 0
+                year_idx = max(0, min(year_idx, len(years) - 1))
+
+                mc, yc = st.columns(2)
+                with mc:
+                    sel_month = st.selectbox(
+                        "",
+                        months,
+                        index=month_1,
+                        label_visibility="collapsed",
+                        key="month_picker",
+                    )
+                with yc:
+                    sel_year = st.selectbox(
+                        "",
+                        years,
+                        index=year_idx,
+                        label_visibility="collapsed",
+                        key="year_picker",
+                    )
+                new_month = months.index(sel_month) + 1
+                if new_month != current.month or sel_year != current.year:
+                    st.session_state.selected_date = _to_datetime(
+                        date(sel_year, new_month, 1)
+                    )
+                    st.session_state.forecast_requested = True
+                    st.rerun()
 
         with subcol3:
             if st.button(get_text("header.next", lang), key="next_period"):
