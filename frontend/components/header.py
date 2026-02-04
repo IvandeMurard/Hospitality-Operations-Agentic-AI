@@ -22,7 +22,9 @@ def _navigate_period(direction: int, view: str) -> None:
             st.session_state.selected_date = (
                 current.replace(day=1) - timedelta(days=1)
             ).replace(day=1)
-
+    
+    # Mark that user has requested a forecast
+    st.session_state.forecast_requested = True
     st.rerun()
 
 
@@ -45,7 +47,8 @@ def render_header(lang: str = "en") -> dict:
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        # View toggle
+        # View toggle - mark forecast requested when view changes
+        previous_view = st.session_state.get("previous_view")
         view = st.radio(
             label="View",
             options=["day", "week", "month"],
@@ -54,13 +57,17 @@ def render_header(lang: str = "en") -> dict:
             label_visibility="collapsed",
             key="view_toggle",
         )
+        # Check if view changed and mark forecast requested
+        if previous_view is not None and previous_view != view:
+            st.session_state.forecast_requested = True
+        st.session_state.previous_view = view
 
     with col2:
         # Period selector
         subcol1, subcol2, subcol3, subcol4 = st.columns([1, 3, 1, 1])
 
         with subcol1:
-            if st.button("◄", key="prev_period"):
+            if st.button(get_text("header.previous", lang), key="prev_period"):
                 _navigate_period(-1, view)
 
         with subcol2:
@@ -91,12 +98,13 @@ def render_header(lang: str = "en") -> dict:
             )
 
         with subcol3:
-            if st.button("►", key="next_period"):
+            if st.button(get_text("header.next", lang), key="next_period"):
                 _navigate_period(1, view)
 
         with subcol4:
             if st.button(get_text("header.today", lang), key="today_btn"):
                 st.session_state.selected_date = datetime.now()
+                st.session_state.forecast_requested = True
                 st.rerun()
 
     # Calculate period bounds

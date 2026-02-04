@@ -19,6 +19,8 @@ from components.timeline_chart import (
     render_day_hero,
     render_month_chart_from_data,
 )
+from components.feedback_panel import render_feedback_panel
+from components.factors_panel import render_factors_panel
 
 
 def _confidence_label(confidence: float, lang: str) -> str:
@@ -88,13 +90,13 @@ def _render_kpi_cards_week(lang: str, week_predictions: list) -> None:
     confidences = [p.get("confidence", 0) for p in week_predictions]
     avg_conf = sum(confidences) / len(confidences) if confidences else 0
     with col1:
-        st.metric("TOTAL WEEK", f"{total} covers")
+        st.metric(get_text("kpi.total_week", lang), f"{total} covers")
     with col2:
-        st.metric("DAILY AVG", f"{avg_covers} covers")
+        st.metric(get_text("kpi.daily_avg", lang), f"{avg_covers} covers")
     with col3:
-        st.metric("PEAK DAY", f"{peak_day.get('day', '—')} ({peak_day.get('covers', 0)})")
+        st.metric(get_text("kpi.peak_day", lang), f"{peak_day.get('day', '—')} ({peak_day.get('covers', 0)})")
     with col4:
-        st.metric("AVG CONFIDENCE", _confidence_label(avg_conf, lang))
+        st.metric(get_text("kpi.avg_confidence", lang), _confidence_label(avg_conf, lang))
 
 
 def _render_kpi_cards_month(
@@ -110,22 +112,22 @@ def _render_kpi_cards_month(
         confidences = [p.get("confidence", 0) for p in month_predictions]
         avg_conf = sum(confidences) / len(confidences) if confidences else 0
         with col1:
-            st.metric("TOTAL MONTH", f"{total} covers")
+            st.metric(get_text("kpi.total_month", lang), f"{total} covers")
         with col2:
-            st.metric("DAILY AVG", f"{avg} covers")
+            st.metric(get_text("kpi.daily_avg", lang), f"{avg} covers")
         with col3:
-            st.metric("PEAK DAY", f"Day {peak.get('date', '')[-2:]} ({peak.get('predicted_covers', 0)})")
+            st.metric(get_text("kpi.peak_day", lang), f"Day {peak.get('date', '')[-2:]} ({peak.get('predicted_covers', 0)})")
         with col4:
-            st.metric("AVG CONFIDENCE", _confidence_label(avg_conf, lang))
+            st.metric(get_text("kpi.avg_confidence", lang), _confidence_label(avg_conf, lang))
     else:
         with col1:
-            st.metric("TOTAL MONTH", "…")
+            st.metric(get_text("kpi.total_month", lang), "…")
         with col2:
-            st.metric("DAILY AVG", "…")
+            st.metric(get_text("kpi.daily_avg", lang), "…")
         with col3:
-            st.metric("PEAK WEEK", "…")
+            st.metric(get_text("kpi.peak_day", lang), "…")
         with col4:
-            st.metric("CONFIDENCE", "…")
+            st.metric(get_text("kpi.confidence", lang), "…")
 
 
 def fetch_prediction(date: datetime, restaurant: str, service: str) -> dict:
@@ -163,11 +165,164 @@ def fetch_prediction(date: datetime, restaurant: str, service: str) -> dict:
     return None
 
 
+def _render_welcome_screen(lang: str) -> None:
+    """Render enhanced welcome screen with preview cards."""
+    today = datetime.now()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+
+    st.markdown(
+        f"""
+        <div style="text-align: center; padding: 2rem 0;">
+            <h2 style="color: #1B4332; margin-bottom: 0.5rem;">
+                {get_text("welcome.title", lang)}
+            </h2>
+            <p style="color: #6C757D; margin-bottom: 2rem;">
+                {get_text("welcome.subtitle", lang)}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%);
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: center;
+                height: 180px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            ">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.75rem; margin: 0;">
+                    📅 {today.strftime("%A")}
+                </p>
+                <p style="color: white; font-size: 0.9rem; font-weight: 500; margin: 0.25rem 0;">
+                    {today.strftime("%B %d")}
+                </p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.7rem; margin-top: 0.5rem;">
+                    {get_text("welcome.show_today", lang)}
+                </p>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            get_text("welcome.show_today", lang),
+            key="welcome_today",
+            use_container_width=True,
+        ):
+            st.session_state.forecast_requested = True
+            st.session_state.selected_date = today
+            if "view_toggle" not in st.session_state:
+                st.session_state.view_toggle = "day"
+            st.rerun()
+
+    with col2:
+        st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%);
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: center;
+                height: 180px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            ">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.75rem; margin: 0;">
+                    📊 {get_text("header.week", lang)}
+                </p>
+                <p style="color: white; font-size: 0.9rem; font-weight: 500; margin: 0.25rem 0;">
+                    {week_start.strftime("%b %d")} – {week_end.strftime("%b %d")}
+                </p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.7rem; margin-top: 0.5rem;">
+                    {get_text("welcome.view_week", lang)}
+                </p>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            get_text("welcome.view_week", lang),
+            key="welcome_week",
+            use_container_width=True,
+        ):
+            st.session_state.forecast_requested = True
+            st.session_state.selected_date = week_start
+            st.session_state.view_toggle = "week"
+            st.rerun()
+
+    with col3:
+        st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(135deg, #40916C 0%, #52B788 100%);
+                border-radius: 12px;
+                padding: 1.5rem;
+                text-align: center;
+                height: 180px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            ">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.75rem; margin: 0;">
+                    📈 {get_text("header.month", lang)}
+                </p>
+                <p style="color: white; font-size: 0.9rem; font-weight: 500; margin: 0.25rem 0;">
+                    {today.strftime("%B %Y")}
+                </p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.7rem; margin-top: 0.5rem;">
+                    {get_text("welcome.view_month", lang)}
+                </p>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            get_text("welcome.view_month", lang),
+            key="welcome_month",
+            use_container_width=True,
+        ):
+            st.session_state.forecast_requested = True
+            st.session_state.selected_date = today.replace(day=1)
+            st.session_state.view_toggle = "month"
+            st.rerun()
+
+
 def render_forecast_view(context: dict) -> None:
     """Render the forecast page."""
     lang = context["language"]
+
+    # Initialize forecast_requested flag if not set
+    if "forecast_requested" not in st.session_state:
+        st.session_state.forecast_requested = False
+
+    # Cache invalidation: clear caches when restaurant or service changes
+    cache_context = f"{context['restaurant']}_{context['service']}"
+    if "last_cache_context" not in st.session_state:
+        st.session_state.last_cache_context = cache_context
+
+    if st.session_state.last_cache_context != cache_context:
+        for key in ["prediction_cache", "week_predictions_cache"]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.session_state.last_cache_context = cache_context
+
     header = render_header(lang=lang)
     st.markdown("<br>", unsafe_allow_html=True)
+
+    # Show welcome screen if no forecast has been requested yet
+    if not st.session_state.forecast_requested:
+        _render_welcome_screen(lang)
+        return
 
     selected_date = header["selected_date"]
     date_display = selected_date.strftime("%A, %B %d")
@@ -228,7 +383,7 @@ def render_forecast_view(context: dict) -> None:
 
     if view == "day":
         if prediction:
-            render_day_hero(prediction, selected_date)
+            render_day_hero(prediction, selected_date, lang=lang)
         else:
             st.info("Select a date to view forecast")
     elif view == "week":
@@ -252,8 +407,18 @@ def render_forecast_view(context: dict) -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info("Factors panel will be implemented in Phase 3")
-    with col2:
-        st.info("Feedback panel will be implemented in Phase 3")
+    # Factors panel (expandable, uses real prediction data)
+    render_factors_panel(prediction, view, lang)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Feedback panel (pre-service / post-service)
+    render_feedback_panel(
+        prediction_id=prediction.get("prediction_id") if prediction else None,
+        predicted_covers=prediction.get("predicted_covers", 0) if prediction else 0,
+        date=header["selected_date"],
+        service=context["service"],
+        restaurant=context["restaurant"],
+        lang=lang,
+        view=view,
+    )

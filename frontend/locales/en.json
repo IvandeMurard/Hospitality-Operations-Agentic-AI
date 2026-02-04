@@ -12,13 +12,32 @@
         "day": "Day",
         "week": "Week",
         "month": "Month",
-        "today": "Today"
+        "today": "Today",
+        "previous": "← Previous",
+        "next": "Next →"
+    },
+    "welcome": {
+        "title": "Welcome to Aetherix",
+        "subtitle": "Intelligent forecasting for hotel F&B operations",
+        "show_today": "Show Today's Forecast",
+        "view_week": "View This Week",
+        "view_month": "View This Month"
+    },
+    "hero": {
+        "expected_covers": "expected covers",
+        "range": "Range",
+        "confidence": "Confidence"
     },
     "kpi": {
         "covers": "Covers",
         "range": "Range",
         "staff": "Staff",
-        "confidence": "Confidence"
+        "confidence": "Confidence",
+        "total_week": "TOTAL WEEK",
+        "daily_avg": "DAILY AVG",
+        "peak_day": "PEAK DAY",
+        "total_month": "TOTAL MONTH",
+        "avg_confidence": "AVG CONFIDENCE"
     },
     "confidence": {
         "high": "High",
@@ -27,21 +46,42 @@
     },
     "factors": {
         "title": "Why this forecast?",
+        "no_data": "No prediction data available",
         "baseline": "Historical baseline",
         "occupancy": "Hotel occupancy",
         "events": "Local events",
+        "no_events": "No events detected",
         "weather": "Weather",
-        "similar_day": "Most similar day"
+        "no_weather": "Weather data unavailable",
+        "similar_day": "Most similar day",
+        "no_similar": "No similar days found",
+        "avg_similar": "Average of similar days",
+        "patterns_count": "Patterns analyzed",
+        "historical_avg": "Historical average",
+        "confidence": "Confidence factors"
     },
     "feedback": {
         "title": "Your assessment",
-        "question": "Does {covers} covers look right for {day} {service}?",
-        "accurate": "Yes, looks accurate",
+        "no_prediction": "Generate a forecast to provide feedback",
+        "pre_title": "Your Assessment",
+        "pre_question": "Does {covers} covers look right for {day} {service}?",
+        "accurate": "Looks accurate",
         "higher": "Expecting higher",
         "lower": "Expecting lower",
+        "expected_covers": "Expected covers",
+        "reason_optional": "Reason (optional)",
+        "reason_placeholder": "e.g., local event, holiday...",
         "confirm": "Confirm",
         "post_title": "How did it go?",
+        "post_question": "Service has ended. Record the actual results.",
         "actual": "Actual covers",
-        "submit": "Submit Results"
+        "actual_covers": "Actual covers served",
+        "submit": "Submit",
+        "submitted_title": "Results Recorded",
+        "predicted": "Predicted",
+        "accuracy": "Accuracy",
+        "success_pre": "Thanks for your feedback!",
+        "success_post": "Results submitted. This improves future predictions.",
+        "error": "Could not submit feedback"
     }
 }

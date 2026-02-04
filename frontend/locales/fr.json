@@ -12,13 +12,32 @@
         "day": "Jour",
         "week": "Semaine",
         "month": "Mois",
-        "today": "Aujourd'hui"
+        "today": "Aujourd'hui",
+        "previous": "← Précédent",
+        "next": "Suivant →"
+    },
+    "welcome": {
+        "title": "Bienvenue sur Aetherix",
+        "subtitle": "Prévisions intelligentes pour les opérations F&B hôtelières",
+        "show_today": "Voir les prévisions du jour",
+        "view_week": "Voir la semaine",
+        "view_month": "Voir le mois"
+    },
+    "hero": {
+        "expected_covers": "couverts attendus",
+        "range": "Fourchette",
+        "confidence": "Fiabilité"
     },
     "kpi": {
         "covers": "Couverts",
         "range": "Fourchette",
         "staff": "Personnel",
-        "confidence": "Fiabilité"
+        "confidence": "Fiabilité",
+        "total_week": "TOTAL SEMAINE",
+        "daily_avg": "MOY. JOUR",
+        "peak_day": "JOUR PIC",
+        "total_month": "TOTAL MOIS",
+        "avg_confidence": "MOY. FIABILITÉ"
     },
     "confidence": {
         "high": "Élevée",
@@ -27,21 +46,42 @@
     },
     "factors": {
         "title": "Pourquoi cette prévision ?",
+        "no_data": "Aucune donnée de prévision disponible",
         "baseline": "Base historique",
         "occupancy": "Occupation hôtel",
         "events": "Événements locaux",
+        "no_events": "Aucun événement détecté",
         "weather": "Météo",
-        "similar_day": "Jour le plus similaire"
+        "no_weather": "Données météo non disponibles",
+        "similar_day": "Jour le plus similaire",
+        "no_similar": "Aucun jour similaire trouvé",
+        "avg_similar": "Moyenne des jours similaires",
+        "patterns_count": "Patterns analysés",
+        "historical_avg": "Moyenne historique",
+        "confidence": "Facteurs de confiance"
     },
     "feedback": {
         "title": "Votre évaluation",
-        "question": "{covers} couverts, ça vous semble correct pour le {service} de {day} ?",
-        "accurate": "Oui, ça semble correct",
+        "no_prediction": "Générez une prévision pour donner votre avis",
+        "pre_title": "Votre évaluation",
+        "pre_question": "{covers} couverts pour le {service} de {day}, ça vous semble juste ?",
+        "accurate": "Ça semble correct",
         "higher": "J'attends plus",
         "lower": "J'attends moins",
+        "expected_covers": "Couverts attendus",
+        "reason_optional": "Raison (optionnel)",
+        "reason_placeholder": "ex: événement local, jour férié...",
         "confirm": "Confirmer",
         "post_title": "Comment ça s'est passé ?",
+        "post_question": "Le service est terminé. Enregistrez les résultats.",
         "actual": "Couverts réels",
-        "submit": "Envoyer"
+        "actual_covers": "Couverts réels servis",
+        "submit": "Envoyer",
+        "submitted_title": "Résultats enregistrés",
+        "predicted": "Prévu",
+        "accuracy": "Précision",
+        "success_pre": "Merci pour votre retour !",
+        "success_post": "Résultats soumis. Cela améliore les prévisions futures.",
+        "error": "Impossible d'envoyer le feedback"
     }
 }
