@@ -75,7 +75,8 @@ async def log_requests(request, call_next):
 # Allow all origins in development, restrict in production
 cors_origins = os.getenv(
     "CORS_ORIGINS",
-    "http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000,http://127.0.0.1:8000"
+    "http://localhost:3000,http://localhost:8000,http://localhost:8501,"
+    "http://127.0.0.1:3000,http://127.0.0.1:8000,http://127.0.0.1:8501"
 ).split(",")
 
 app.add_middleware(

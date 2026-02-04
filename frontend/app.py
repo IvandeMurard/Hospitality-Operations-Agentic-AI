@@ -19,11 +19,8 @@ from views.settings_view import render_settings_view
 # Inject CSS
 st.markdown(AETHERIX_CSS, unsafe_allow_html=True)
 
-# Lang from session state (set by sidebar)
-lang = st.session_state.get("lang_select", "en")
-
-# Render sidebar and get context
-context = render_sidebar(lang=lang)
+# Render sidebar and get context (lang comes from context, set by sidebar selectbox)
+context = render_sidebar()
 
 # Route to correct view based on sidebar selection
 if context["page"] == "forecast":

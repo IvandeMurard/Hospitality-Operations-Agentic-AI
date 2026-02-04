@@ -1,16 +1,20 @@
 """Aetherix Sidebar Component"""
 
+from typing import Optional
+
 import streamlit as st
 from config import get_text
 
 
-def render_sidebar(lang: str = "en") -> dict:
+def render_sidebar(lang: Optional[str] = None) -> dict:
     """
     Render the Aetherix sidebar with pure white text and button-based nav.
 
     Returns:
         dict with: page, restaurant, service, language
     """
+    if lang is None:
+        lang = st.session_state.get("lang_select", "en")
     if "current_page" not in st.session_state:
         st.session_state.current_page = "forecast"
 
