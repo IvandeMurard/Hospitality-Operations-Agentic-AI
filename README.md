@@ -1,6 +1,6 @@
 ---
 title: Aetherix
-emoji: 🍽️
+emoji: 🌿
 colorFrom: blue
 colorTo: purple
 sdk: docker
