@@ -1,7 +1,7 @@
 # F&B Operations Agent - Technical Architecture
 
-**Version:** 0.1.0 (MVP Phase 0)  
-**Last Updated:** December 2, 2025  
+**Version:** 0.2.0 (Phase 3)  
+**Last Updated:** February 2026  
 **Author:** Ivan de Murard
 
 ---
@@ -39,7 +39,7 @@ This dual approach aligns with hospitality's evolution toward **autonomous agent
 **Core Principles:**
 - **Human-in-the-loop:** Manager approves all predictions (augmented, not automated)
 - **Explainable AI:** Reasoning always visible (trust-building critical in hospitality)
-- **Voice-enabled:** Hands-free interactions during service (opt-in, not forced)
+- **Dashboard-first:** Aetherix UI as primary interface; voice/chat planned for Phase 5
 - **PMS-agnostic:** Compatible with Mews, Apaleo, and any API-first PMS
 
 ---
@@ -49,55 +49,44 @@ This dual approach aligns with hospitality's evolution toward **autonomous agent
 ### High-Level Overview
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                       FRONTEND                              │
-│  Next.js 14 + TypeScript + shadcn/ui + Tailwind CSS         │
-│                                                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │  Dashboard   │  │ Prediction   │  │   Patterns   │       │
-│  │              │  │   Detail     │  │   Library    │       │
-│  └──────────────┘  └──────────────┘  └──────────────┘       │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Command Palette (⌘K / Ctrl+K / ²)                  │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  Voice Input Widget (ElevenLabs - opt-in)            │   │
-│  └──────────────────────────────────────────────────────┘   │
+│                    PRESENTATION LAYER                        │
+│  Aetherix Dashboard (Streamlit) │ Future: WhatsApp/Slack    │
+└────────────────────────────────┬────────────────────────────┘
+                                 │
+┌────────────────────────────────▼────────────────────────────┐
+│                    INTELLIGENCE LAYER                        │
+│  Prediction Engine │ Reasoning Engine │ Staff Recommender    │
+└────────────────────────────────┬────────────────────────────┘
+                                 │
+┌────────────────────────────────▼────────────────────────────┐
+│                      SEMANTIC LAYER                          │
+│  RAG (Qdrant) │ Context Enrichment │ PMS Adapters (future)  │
+└────────────────────────────────┬────────────────────────────┘
+                                 │
+┌────────────────────────────────▼────────────────────────────┐
+│                       DATA LAYER                             │
+│  Patterns DB │ Feedback DB │ Restaurant Profiles             │
 └─────────────────────────────────────────────────────────────┘
-                            ↓ HTTPS REST API
-┌─────────────────────────────────────────────────────────────┐
-│                        BACKEND                              │
-│            FastAPI + Python 3.11                            │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Coordinator Agent                       │   │
-│  │  (Routes requests, orchestrates multi-agent system)  │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                            ↓                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │   Demand     │  │    Staff     │  │  Reasoning   │       │
-│  │  Predictor   │  │ Recommender  │  │   Engine     │       │
-│  └──────────────┘  └──────────────┘  └──────────────┘       │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │           State Management (Redis)                   │   │
-│  │  Session context, multi-turn conversations           │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-         ↓              ↓              ↓              ↓
-    [Claude AI]   [Qdrant Cloud]  [ElevenLabs]  [Supabase]
-    Reasoning     Vector Search    Voice I/O      Database
-    Embeddings    Pattern Memory   Synthesis      Storage
 ```
+
+### Component Status
+
+| Component | Phase | Status |
+|-----------|-------|--------|
+| Prediction Engine | 1 | ✅ Production |
+| Reasoning Engine | 1 | ✅ Production |
+| RAG/Qdrant | 2 | ✅ Production |
+| Dashboard (Aetherix) | 3 | 🔄 MVP |
+| Feedback Loop | 3-4 | 🔄 Backend done |
+| PMS Adapters | 5 | 📋 Planned |
+| Voice Interface | 5 | 📋 Planned |
 
 ### Component Breakdown
 
-**Frontend (Next.js 14)**
-- **App Router:** File-based routing, server components
-- **shadcn/ui:** Accessible, customizable components (Command, Card, Dialog)
-- **Tailwind CSS:** Utility-first styling, consistent design tokens
-- **Deployment:** Vercel (free tier, auto-deploy from GitHub)
+**Frontend (Phase 3: Streamlit)**
+- **Aetherix Dashboard:** Streamlit app — Day/Week/Month views, Factors panel, Feedback panel
+- **Deployment:** Streamlit Cloud (https://aetherix.streamlit.app)
+- **Future (Phase 5):** Next.js 14, Command Palette, Voice widget (ElevenLabs)
 
 **Backend (FastAPI)**
 - **Multi-agent architecture:** Coordinator dispatches to specialized agents
@@ -736,7 +725,7 @@ payload_schema = {
 
 ## Security & Compliance
 
-### MVP (Phase 0-2)
+### MVP (Phase 1-3)
 
 **Authentication:**
 - No auth (single-user demo)
@@ -984,4 +973,4 @@ Future: Microservices + Event-Driven
 
 **Document Version:** 0.1.0  
 **Last Updated:** December 2, 2025  
-**Next Review:** Phase 1 completion (post-backend implementation)
+**Next Review:** Phase 3 completion (post-dashboard MVP)

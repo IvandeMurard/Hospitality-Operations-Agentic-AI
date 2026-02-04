@@ -20,19 +20,38 @@ F&B/Operations Manager at mid-high end restaurants (80-150 covers/service), mode
 **Staffing prediction accuracy:** 85%+ (vs 70% baseline with manual methods)
 - Measured by comparing predicted covers vs actual POS data
 
+## Approach
+
+**Dashboard-first, voice-available** interface for F&B managers.
+
+The agent provides a visual dashboard (Aetherix) as the primary interface, with voice/chat capabilities planned for Phase 5 integration with messaging platforms (WhatsApp, Slack).
+
+### Why Dashboard-First?
+
+1. **Regulatory compliance** - EU AI Act and GDPR require human-in-the-loop visibility
+2. **Industry standard** - F&B managers expect visual dashboards
+3. **Trust** - Building trust by showcasing the process
+4. **Accessibility** - Works in noisy restaurant environments
+
 ## Architecture Vision
 
-### MVP Phase (Current)
-Voice-first conversational interface for staffing forecasting:
-- **Voice Interface:** ElevenLabs Conversational AI
-- **LLM:** Mistral (cost-efficient: $1/1M tokens)
-- **Vector DB:** Qdrant (pattern similarity matching)
-- **External APIs:** PredictHQ (events), Weather API
-- **Data Source:** POS system integration for historical covers
+### Current Stack (Phase 1-3)
 
-### Future Phases
-- **Phase 2:** F&B inventory optimization (demand prediction, waste reduction)
-- **Phase 3:** Multi-domain operations platform (logistics, equipment, rooms)
+- **Dashboard:** Aetherix (Streamlit) — primary interface
+- **LLM:** Claude Sonnet 4 (reasoning), Mistral Embed (embeddings)
+- **Vector DB:** Qdrant (495 patterns, semantic search)
+- **External APIs:** PredictHQ (events), Weather API (planned)
+- **Data Source:** Kaggle-derived patterns, Supabase for feedback
+
+### Roadmap
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Done | Backend MVP — Prediction + Reasoning engines |
+| Phase 2 | ✅ Done | RAG — Vector search with 495 patterns |
+| Phase 3 | 🔄 Now | Dashboard MVP — Aetherix UI |
+| Phase 4 | 📋 Next | Feedback Loop — Accuracy tracking |
+| Phase 5 | 📋 Later | Integrations — PMS, POS, voice |
 
 ## Key Design Principles
 
@@ -48,11 +67,10 @@ Manager retains final control:
 - One-click approval with manual adjustment capability
 - Build trust through transparency
 
-### Voice-First UX
-Manager can interact hands-free during service:
-- Natural language queries: "predict Saturday dinner"
-- Conversational explanations of reasoning
-- Quick validation/approval flow
+### Dashboard-First UX
+- Primary interface: Aetherix Streamlit dashboard
+- Day/Week/Month views, Factors panel, Feedback panel
+- Voice/chat planned for Phase 5 (messaging integration)
 
 ### Hospitality-Specific
 Not generic forecasting:
@@ -66,9 +84,9 @@ Not generic forecasting:
 1. **Historical Pattern Retrieval:** Query Qdrant for similar past scenarios using vector embeddings (day type, season, occupancy)
 2. **Event Enrichment:** PredictHQ API for concerts, festivals, sports events within 5km
 3. **Weather Context:** Weather API for forecast conditions
-4. **LLM Synthesis:** Mistral generates prediction with confidence score and reasoning
-5. **Manager Review:** Voice/visual interface presents prediction with explainability
-6. **Validation Loop:** Post-service POS data updates accuracy metrics
+4. **LLM Synthesis:** Claude generates prediction with confidence score and reasoning
+5. **Manager Review:** Dashboard presents prediction with explainability
+6. **Validation Loop:** Post-service feedback updates accuracy metrics
 
 ### Data Privacy
 - No sensitive guest PII stored
@@ -79,7 +97,7 @@ Not generic forecasting:
 
 ### Cost Optimization
 Target <$10/restaurant/month for MVP viability:
-- Prefer Mistral over OpenAI for LLM calls
+- Prefer Mistral over OpenAI for embeddings
 - Use Qdrant free tier (generous for single-restaurant use case)
 - Cache weather/event data aggressively
 - Batch POS data syncs (daily, not real-time)
@@ -113,12 +131,6 @@ Qdrant embeddings should capture:
 - Test against known scenarios (major past events)
 - Compare agent predictions vs manager's original decisions
 
-### Voice Interface Testing
-- Test interruption handling during busy service times
-- Verify multi-turn conversation flow for clarifications
-- Ensure hands-free usability with background noise
-- Test error recovery when API calls fail
-
 ### API Resilience
 - Handle PredictHQ rate limits gracefully
 - Cache weather forecasts (update 2x daily max)
@@ -133,22 +145,17 @@ Target integrations for cover data:
 - Daily batch sync sufficient (not real-time)
 - Only need: covers count, timestamp, revenue band
 
-### Scheduling Tools (Phase 2)
+### Scheduling Tools (Phase 5)
 Post-MVP auto-push to:
 - 7shifts, When I Work, Homebase
 - Requires staffing ratio logic (covers → headcount)
 
 ### Manager Communication
-- Voice interface primary (ElevenLabs)
-- Dashboard/web view secondary for detailed review
-- Mobile-first design (managers on the floor)
+- Dashboard primary (Aetherix Streamlit)
+- Voice/chat secondary (Phase 5: WhatsApp, Slack, Teams)
 
 ## Current Repository State
 
-This repository is in the initial planning phase. The Problem_Statement.md in docs/ contains the full product vision, market analysis, and success metrics.
-
-When beginning implementation, prioritize:
-1. POS data ingestion pipeline (historical covers)
-2. Qdrant vector store setup with embedding strategy
-3. LLM prompt engineering for explainable predictions
-4. Simple CLI/voice prototype before full interface
+- **Phase 1-2:** Backend and RAG complete, deployed on HuggingFace
+- **Phase 3:** Dashboard (Aetherix) live at https://aetherix.streamlit.app
+- **Next:** Feedback loop accuracy tracking, History view
