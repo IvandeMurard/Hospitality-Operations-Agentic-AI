@@ -7,7 +7,11 @@ from typing import Optional
 
 from config import get_text, API_BASE
 from components.header import render_header
-from components.loading_steps import render_loading_steps, PREDICTION_STEPS
+from components.loading_steps import (
+    render_loading_steps,
+    PREDICTION_STEPS,
+    WEEK_PREDICTION_STEPS,
+)
 from components.timeline_chart import (
     get_week_predictions,
     get_month_predictions,
@@ -187,11 +191,7 @@ def render_forecast_view(context: dict) -> None:
     elif view == "day":
         prediction = st.session_state.prediction_cache.get(cache_key)
     else:
-        prediction = fetch_prediction(
-            date=selected_date,
-            restaurant=context["restaurant"],
-            service=context["service"],
-        )
+        prediction = None  # Week/month use their own data fetch below
 
     # KPI cards (day view: single prediction; week/month handled below after data fetch)
     if view == "day":
@@ -202,12 +202,13 @@ def render_forecast_view(context: dict) -> None:
             st.session_state.week_predictions_cache = {}
         week_cache_key = f"{week_start.strftime('%Y-%m-%d')}_{context['restaurant']}_{context['service']}"
         if week_cache_key not in st.session_state.week_predictions_cache:
-            with st.spinner("Loading week forecast..."):
-                week_predictions = get_week_predictions(
-                    start_date=week_start,
-                    restaurant=context["restaurant"],
-                    service=context["service"],
-                )
+            steps = [dict(s) for s in WEEK_PREDICTION_STEPS]
+            steps[-1]["action"] = lambda: get_week_predictions(
+                start_date=week_start,
+                restaurant=context["restaurant"],
+                service=context["service"],
+            )
+            week_predictions = render_loading_steps(steps)
             st.session_state.week_predictions_cache[week_cache_key] = week_predictions
         else:
             week_predictions = st.session_state.week_predictions_cache[week_cache_key]

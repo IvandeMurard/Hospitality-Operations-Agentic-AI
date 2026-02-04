@@ -60,6 +60,7 @@ def render_loading_steps(
                     background-color: #2D6A4F;
                     border-radius: 50%;
                     margin-right: 0.75rem;
+                    animation: pulse 1s infinite;
                 "></div>
                 <span style="color: #212529; font-weight: 500;">Generating forecast...</span>
             </div>

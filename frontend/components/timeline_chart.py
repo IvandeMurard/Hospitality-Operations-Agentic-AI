@@ -33,9 +33,8 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
         conf_label = "Low"
         conf_color = "#E76F51"
 
-    st.markdown(
-        f"""
-        <div style="
+    st.html(
+        f"""<div style="
             background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%);
             border-radius: 12px;
             padding: 2.5rem;
@@ -49,7 +48,7 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
                 letter-spacing: 0.1em;
                 margin-bottom: 0.5rem;
             ">{date.strftime('%A, %B %d, %Y')}</p>
-            
+
             <h1 style="
                 color: #FFFFFF;
                 font-size: 4rem;
@@ -57,13 +56,13 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
                 margin: 0.5rem 0;
                 letter-spacing: -0.02em;
             ">{covers}</h1>
-            
+
             <p style="
                 color: rgba(255,255,255,0.8);
                 font-size: 1.125rem;
                 margin-bottom: 1.5rem;
             ">expected covers</p>
-            
+
             <div style="
                 display: flex;
                 justify-content: center;
@@ -83,9 +82,7 @@ def render_day_hero(prediction: dict, date: datetime) -> None:
                     </p>
                 </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+        </div>"""
     )
 
 
@@ -102,56 +99,60 @@ def _restaurant_to_id(restaurant: str) -> str:
 def get_week_predictions(
     start_date: datetime, restaurant: str, service: str
 ) -> List[Dict]:
-    """Fetch predictions for 7 days starting from start_date."""
-    predictions = []
+    """Fetch predictions for 7 days using batch API."""
+    dates = [
+        (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+        for i in range(7)
+    ]
     restaurant_id = _restaurant_to_id(restaurant)
     service_type = service.lower()
-
-    for i in range(7):
-        date = start_date + timedelta(days=i)
-        try:
-            response = requests.post(
-                f"{API_BASE}/predict",
-                json={
-                    "service_date": date.strftime("%Y-%m-%d"),
-                    "service_type": service_type,
-                    "restaurant_id": restaurant_id,
-                },
-                timeout=10,
-            )
-            if response.status_code == 200:
-                data = response.json()
-                metrics = data.get("accuracy_metrics") or {}
+    try:
+        response = requests.post(
+            f"{API_BASE}/predict/batch",
+            json={
+                "dates": dates,
+                "service_type": service_type,
+                "restaurant_id": restaurant_id,
+            },
+            timeout=90,
+        )
+        if response.status_code == 200:
+            data = response.json()
+            raw = data.get("predictions") or []
+            predictions = []
+            for i, p in enumerate(raw):
+                date_str = p.get("date") or p.get("service_date") or dates[i]
+                try:
+                    dt = datetime.fromisoformat(str(date_str))
+                except (ValueError, TypeError):
+                    dt = start_date + timedelta(days=i)
+                metrics = p.get("accuracy_metrics") or {}
                 interval = metrics.get("prediction_interval") or [0, 0]
                 range_low = interval[0] if len(interval) >= 1 else 0
                 range_high = interval[1] if len(interval) >= 2 else 0
                 predictions.append({
-                    "date": date,
-                    "day": date.strftime("%a"),
-                    "covers": data.get("predicted_covers", 0),
+                    "date": dt,
+                    "day": dt.strftime("%a"),
+                    "covers": p.get("predicted_covers", 0),
                     "range_low": range_low,
                     "range_high": range_high,
-                    "confidence": data.get("confidence", 0),
+                    "confidence": p.get("confidence", 0),
                 })
-            else:
-                predictions.append({
-                    "date": date,
-                    "day": date.strftime("%a"),
-                    "covers": 0,
-                    "range_low": 0,
-                    "range_high": 0,
-                    "confidence": 0,
-                })
-        except Exception:
-            predictions.append({
-                "date": date,
-                "day": date.strftime("%a"),
-                "covers": 0,
-                "range_low": 0,
-                "range_high": 0,
-                "confidence": 0,
-            })
-    return predictions
+            return predictions
+    except Exception:
+        pass
+    # Fallback: return empty week
+    return [
+        {
+            "date": start_date + timedelta(days=i),
+            "day": (start_date + timedelta(days=i)).strftime("%a"),
+            "covers": 0,
+            "range_low": 0,
+            "range_high": 0,
+            "confidence": 0,
+        }
+        for i in range(7)
+    ]
 
 
 def get_month_predictions(
