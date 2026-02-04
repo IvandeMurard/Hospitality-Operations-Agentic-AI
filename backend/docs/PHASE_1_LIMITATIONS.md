@@ -1,112 +1,59 @@
-# Phase 1 Limitations
+# Known Limitations
 
-> Transparency document for demo and Phase 2 planning.
-> Last updated: 2026-01-12
+> Transparency document for demo and roadmap planning.
+> Last updated: 2026-02-04
 
-## 🎯 What Works
+---
 
-### Prediction Engine
-- ✅ Contextual predictions (covers vary by day, weather, events)
-- ✅ Holiday logic (Christmas ~40, NYE ~200 covers)
-- ✅ Weather adjustments (-10/-20 covers for rain)
-- ✅ Event boost (+15 covers per nearby event)
-- ✅ Confidence scoring (85-95%)
+## Phase 1-2 (Completed)
 
-### Staff Recommender (Partial)
-- ✅ Calculation logic works (servers, hosts, kitchen)
-- ✅ Configurable ratios
-- ✅ Delta vs usual staffing
-- ⚠️ **Limited value without internal context** (reservations, private events, historical data)
+### What Works
 
-### Reasoning Engine
-- ✅ Rich explanations via Claude API
-- ✅ Patterns used in reasoning
-- ✅ Contextual factors mentioned
-
-### API & Infrastructure
-- ✅ FastAPI with Pydantic validation
-- ✅ Documented Swagger UI (/docs)
+- ✅ **Prediction Engine** with confidence scoring
+- ✅ **Reasoning Engine** with explainability
+- ✅ **RAG vector search** (495 patterns, Qdrant Cloud)
+- ✅ **API endpoints** (/predict, /predict/batch)
 - ✅ Deployed on HuggingFace Spaces
-- ✅ 7 passing integration tests
+
+### What's Limited
+
+- ⚠️ **Mock data** derived from Kaggle (not real hotel data)
+- ⚠️ **Staff Recommender** uses generic ratios (no PMS context)
+- ⚠️ No reservation/event awareness from real systems
+- ⚠️ HuggingFace cold start (~30s after inactivity)
 
 ---
 
-## ⚠️ Current Limitations
+## Phase 3 (Current)
 
-### 1. Mock Data
+### In Progress
 
-| Component | Phase 1 (current) | Phase 2 (target) |
-|-----------|-------------------|------------------|
-| Events | Randomly generated | PredictHQ API |
-| Weather | Simulated by season | OpenWeather API |
-| Occupancy | Not available | PMS (Mews/Apaleo) |
-| History | Generated patterns | Qdrant vector search |
+- **Dashboard UI** (Aetherix) — Day/Week/Month views
+- **Feedback panel** (pre/post service) — Backend ✅, frontend in progress
+- **Week/Month batch views** — Batch API integration
 
-**Impact:** Credible predictions but not calibrated on real data.
+### Known Issues
 
-### 2. No PMS Integration
-
-- No hotel occupancy data
-- No guest profiles (VIP, dietary)
-- No internal events (conferences, weddings)
-
-**Impact:** Agent cannot correlate F&B demand with hotel occupancy.
-
-### 3. Patterns Not Persisted
-
-- Patterns generated per request (deterministic seed)
-- No Qdrant vector search (collection created but unused)
-- No learning from past predictions
-
-**Impact:** No "memory" of actual restaurant patterns.
-
-### 4. Hardcoded Restaurant Config
-```python
-# Current (hardcoded)
-covers_per_server = 18
-usual_servers = 7
-
-# Phase 2 (per restaurant)
-SELECT ratios FROM restaurant_config WHERE id = ?
-```
-
-**Impact:** All restaurants use the same ratios.
-
-### 5. HuggingFace Performance
-
-- Cold start: ~30s after inactivity
-- No Redis caching
-- Single instance (no scaling)
-
-**Impact:** First request slow, acceptable for demo.
-
-### 6. Staff Recommender Not Context-Aware
-
-Current state:
-- Calculates staffing based on predicted covers only
-- No access to reservations, private events, staff availability
-- Uses generic ratios (not restaurant-specific)
-
-**Impact:** Recommendations are mathematically correct but not operationally meaningful without real restaurant data.
-
-**Phase 2 fix:** Integrate PMS reservation data + restaurant-specific configurations.
+| Issue | Description |
+|-------|-------------|
+| Week/Month views | Batch API parsing (IVA-65) |
+| Feedback panel | prediction_id detection |
+| Cache invalidation | Stale data after prediction updates |
 
 ---
 
-## 📋 Phase 2 Roadmap
+## Planned Improvements
 
-| Priority | Feature | Effort | Impact |
-|----------|---------|--------|--------|
-| 🔴 Critical | Mews PMS integration | 2 weeks | Real occupancy data |
-| 🔴 Critical | PredictHQ events API | 3 days | Real events |
-| 🟡 High | Qdrant pattern matching | 1 week | Semantic search |
-| 🟡 High | Restaurant configs (Supabase) | 3 days | Multi-tenant |
-| 🟢 Medium | Weather API | 1 day | Real weather |
-| 🟢 Medium | Redis caching | 2 days | Performance |
+| Issue | Phase | Description |
+|-------|-------|-------------|
+| Real hotel data | 4+ | Partner with design partner |
+| PMS integration | 5 | Mews, Opera adapters |
+| Continuous learning | 4 | Learn from feedback |
+| Accuracy tracking (MAPE) | 4 | Post-service feedback pipeline |
 
 ---
 
-## 💡 PM Decisions Documented
+## PM Decisions Documented
 
 ### Why mock data in Phase 1?
 
@@ -125,16 +72,16 @@ Real integrations require hotel design partners.
 - HuggingFace = AI/ML signal for Mews portfolio
 - Cold start acceptable for demo
 
-### Why no frontend in Phase 1?
+### Why dashboard-first?
 
-> "Backend-first proves the intelligence layer works."
+> "Backend-first proved the intelligence layer. Dashboard-first enables compliance and trust."
 
-The differentiator is the agent, not the UI. Phase 2 will add a minimal dashboard.
+EU AI Act and GDPR require human-in-the-loop visibility. Phase 3 adds Aetherix UI.
 
 ---
 
-## 🔗 Resources
+## Resources
 
 - **Live API:** https://ivandemurard-fb-agent-api.hf.space/docs
-- **GitHub:** [fb-agent-mvp](https://github.com/...)
+- **Live Dashboard:** https://aetherix.streamlit.app
 - **Linear:** [F&B Agent Project](https://linear.app/ivanportfolio/project/fandb-agent)

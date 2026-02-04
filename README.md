@@ -115,9 +115,9 @@ An **intelligence layer** for hotel managers that:
 - Adding new PMS = new adapter, not agent rewrite
 
 **📱 Ambient Experience**
-- Voice-first design
-- Dashboard for transparency, settigns, analytics, and complex planning
-- The agent lives in your messaging apps (WhatsApp, Slack, Teams) for daily operations
+- Dashboard-first design (Aetherix UI live)
+- Dashboard for transparency, settings, analytics, and complex planning
+- Voice/chat in messaging apps (WhatsApp, Slack, Teams) planned for Phase 5
 
 ---
 
@@ -138,11 +138,23 @@ An **intelligence layer** for hotel managers that:
 
 ## 🚀 Live Demo
 
-**API Endpoint:** [https://ivandemurard-fb-agent-api.hf.space](https://ivandemurard-fb-agent-api.hf.space)
+🔗 **Live Dashboard:** [https://aetherix.streamlit.app](https://aetherix.streamlit.app)  
+🔗 **API:** [https://ivandemurard-fb-agent-api.hf.space](https://ivandemurard-fb-agent-api.hf.space)  
+🔗 **API Docs:** [https://ivandemurard-fb-agent-api.hf.space/docs](https://ivandemurard-fb-agent-api.hf.space/docs)
 
-**Interactive Documentation:** [https://ivandemurard-fb-agent-api.hf.space/docs](https://ivandemurard-fb-agent-api.hf.space/docs)
+### Current Status
 
-**Dashboard:** Coming soon (déploiement : voir [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
+- ✅ Phase 1: Backend MVP (prediction engine, reasoning)
+- ✅ Phase 2: RAG with Qdrant (495 patterns, semantic search)
+- 🔄 Phase 3: Dashboard MVP (Aetherix)
+
+### Deployment
+
+| Component | Status | URL |
+|-----------|--------|-----|
+| Dashboard | ✅ Live | [aetherix.streamlit.app](https://aetherix.streamlit.app) |
+| API | ✅ Live | [HuggingFace Spaces](https://ivandemurard-fb-agent-api.hf.space) |
+| Vector DB | ✅ Live | Qdrant Cloud (495 patterns) |
 
 ---
 
@@ -175,25 +187,21 @@ In progress:
 
 Linear issues: IVA-52, IVA-53, IVA-54, IVA-55, IVA-56
 
-### 📋 Phase 4 - Semantic Layer & Integrations (Next)
+### 📋 Phase 4 - Feedback Loop + Accuracy (Next)
 
 Planned:
-- **PMS Adapter Pattern**: Unified interface for Mews, Opera, Protel
-- **Real PMS Connection**: First live integration (likely Mews)
-- **Weather & Events APIs**: PredictHQ, OpenWeather integration
-- **Multi-property Support**: Hotel groups with multiple F&B operations
+- **Post-service Feedback**: Actual covers input to close the loop
+- **MAPE Tracking**: Real accuracy calculation and display
+- **Prediction History**: Accuracy history view
+- **Continuous Learning**: Pipeline from feedback to model improvement
 
-Linear issues: IVA-47
-
-### 🔮 Phase 5 - Ambient AX (Later)
+### 🔮 Phase 5 - Integrations (Future)
 
 Vision:
-- **Conversational Interface**: Monthly/weekly briefings via WhatsApp/Slack/Teams
-- **Proactive Alerts**: "Next month looks busy, consider +1 server."
-- **Natural Feedback**: Reply with actual covers, and the agent learns
-- **Voice Interface**: Voice feature integration (ElevenLabs or other)
-
-Linear issues: IVA-57
+- **PMS Connectors**: Mews, Opera, Protel adapters
+- **POS Auto-sync**: Real cover data from Toast, Square, etc.
+- **Voice/Chat Interface**: WhatsApp, Slack, Teams (ambient AX)
+- **What-if Scenario Modeling**
 
 ---
 
