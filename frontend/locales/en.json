@@ -1,0 +1,47 @@
+{
+    "nav": {
+        "forecast": "Forecast",
+        "history": "History",
+        "settings": "Settings"
+    },
+    "sidebar": {
+        "restaurant": "Restaurant",
+        "service": "Service"
+    },
+    "header": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "today": "Today"
+    },
+    "kpi": {
+        "covers": "Covers",
+        "range": "Range",
+        "staff": "Staff",
+        "confidence": "Confidence"
+    },
+    "confidence": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+    },
+    "factors": {
+        "title": "Why this forecast?",
+        "baseline": "Historical baseline",
+        "occupancy": "Hotel occupancy",
+        "events": "Local events",
+        "weather": "Weather",
+        "similar_day": "Most similar day"
+    },
+    "feedback": {
+        "title": "Your assessment",
+        "question": "Does {covers} covers look right for {day} {service}?",
+        "accurate": "Yes, looks accurate",
+        "higher": "Expecting higher",
+        "lower": "Expecting lower",
+        "confirm": "Confirm",
+        "post_title": "How did it go?",
+        "actual": "Actual covers",
+        "submit": "Submit Results"
+    }
+}

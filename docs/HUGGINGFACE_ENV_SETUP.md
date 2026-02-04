@@ -37,6 +37,16 @@ Pour chaque variable, cliquez sur **"New secret"** ou **"Add secret"** :
    - Name: `ANTHROPIC_API_KEY`
    - Value: (votre clé Anthropic depuis .env)
 
+5. **SUPABASE_URL**
+   - Name: `SUPABASE_URL`
+   - Value: URL de votre projet Supabase (ex. `https://xxxxx.supabase.co`)
+   - Où la trouver : Supabase Dashboard → Project Settings → API
+
+6. **SUPABASE_KEY**
+   - Name: `SUPABASE_KEY`
+   - Value: Clé **service_role** du projet (feedback loop, stockage des prédictions)
+   - Où la trouver : Supabase Dashboard → Project Settings → API → service_role
+
 ### Étape 4 : Redémarrer l'espace
 Après avoir ajouté toutes les variables :
 1. Allez dans l'onglet **"App"**
