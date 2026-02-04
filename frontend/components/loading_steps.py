@@ -75,7 +75,7 @@ def render_loading_steps(
             time.sleep(0.25)
         completed.append(label)
 
-    # Final state - all complete
+    # Final state - all complete (show briefly then clear)
     final_lines = []
     for completed_label in completed:
         final_lines.append(
@@ -98,6 +98,10 @@ def render_loading_steps(
     </div>
     """
     steps_placeholder.markdown(final_html, unsafe_allow_html=True)
+    
+    # Show "Forecast ready" briefly (1.5 seconds) then clear the placeholder
+    time.sleep(1.5)
+    steps_placeholder.empty()
 
     return result
 
