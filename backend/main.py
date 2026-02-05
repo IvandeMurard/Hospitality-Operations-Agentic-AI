@@ -16,7 +16,7 @@ import sys
 import io
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from fastapi import HTTPException
 
 
@@ -347,46 +347,62 @@ async def create_prediction_batch(request: BatchPredictionRequest):
     """
     import logging
     logger = logging.getLogger("uvicorn")
-    MAX_DATES = 31
-    dates = request.dates[:MAX_DATES]
+    
     try:
-        st_enum = ServiceType(request.service_type.lower())
-    except (ValueError, AttributeError):
-        st_enum = ServiceType.DINNER
+        logger.info(f"[PREDICT/BATCH] Request: {len(request.dates)} dates for {request.restaurant_id} ({request.service_type})")
+        _write_debug_log(f"[PREDICT/BATCH] Request: {len(request.dates)} dates for {request.restaurant_id} ({request.service_type})")
+        
+        MAX_DATES = 31
+        dates = request.dates[:MAX_DATES]
+        try:
+            st_enum = ServiceType(request.service_type.lower())
+        except (ValueError, AttributeError):
+            st_enum = ServiceType.DINNER
 
-    predictions = []
-    for d in dates:
-        try:
-            service_date = date.fromisoformat(d)
-        except ValueError:
-            continue
-        single = PredictionRequest(
-            restaurant_id=request.restaurant_id,
-            service_date=service_date,
-            service_type=st_enum,
-        )
-        try:
-            resp = await create_prediction(single)
-            out = resp.model_dump()
-            out["date"] = d
-            out["service_date"] = d
-            predictions.append(out)
-        except Exception as e:
-            logger.warning(f"[PREDICT/BATCH] Skip date {d}: {e}")
-            predictions.append({
-                "date": d,
-                "service_date": d,
-                "predicted_covers": 0,
-                "confidence": 0.0,
-                "accuracy_metrics": {"prediction_interval": [0, 0]},
-                "staff_recommendation": {},
-            })
-    return {
-        "predictions": predictions,
-        "count": len(predictions),
-        "service_type": request.service_type,
-        "restaurant_id": request.restaurant_id,
-    }
+        predictions = []
+        for d in dates:
+            try:
+                service_date = date.fromisoformat(d)
+            except ValueError as e:
+                logger.warning(f"[PREDICT/BATCH] Invalid date format: {d} - {e}")
+                continue
+            single = PredictionRequest(
+                restaurant_id=request.restaurant_id,
+                service_date=service_date,
+                service_type=st_enum,
+            )
+            try:
+                resp = await create_prediction(single)
+                out = resp.model_dump()
+                out["date"] = d
+                out["service_date"] = d
+                predictions.append(out)
+            except Exception as e:
+                logger.warning(f"[PREDICT/BATCH] Skip date {d}: {e}")
+                _write_debug_log(f"[PREDICT/BATCH] Skip date {d}: {e}")
+                predictions.append({
+                    "date": d,
+                    "service_date": d,
+                    "predicted_covers": 0,
+                    "confidence": 0.0,
+                    "accuracy_metrics": {"prediction_interval": [0, 0]},
+                    "staff_recommendation": {},
+                })
+        
+        logger.info(f"[PREDICT/BATCH] Success: {len(predictions)} predictions generated")
+        _write_debug_log(f"[PREDICT/BATCH] Success: {len(predictions)} predictions generated")
+        
+        return {
+            "predictions": predictions,
+            "count": len(predictions),
+            "service_type": request.service_type,
+            "restaurant_id": request.restaurant_id,
+        }
+    except Exception as e:
+        error_detail = str(e).encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+        logger.error(f"[PREDICT/BATCH] Error: {error_detail}")
+        _write_debug_log(f"[PREDICT/BATCH] Error: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Batch prediction failed: {error_detail}")
 
 
 if __name__ == "__main__":
