@@ -31,18 +31,6 @@ An agent that:
 | Feedback = separate step     | Natural correction in conversation    |
 | PMS + external data silos    | Semantic unification + contextual RAG |
 
-### Quick Look at the Current Interface (Phase 3 – MVP Dashboard)
-<!-- Replace these placeholders with your real screenshots as soon as possible – huge impact boost -->
-
-![Restaurant Configuration Dashboard](https://via.placeholder.com/800x450/1e3a8a/ffffff?text=Restaurant+Config+Profile+%7C+Streamlit+MVP)  
-*Configuration screen: restaurant profile, historical ratios, simulated PMS sources*
-
-![Daily Prediction + Explanation](https://via.placeholder.com/800x450/065f46/ffffff?text=Tomorrow's+Covers+Prediction+%7C+Claude+Explainability)  
-*Example of explained prediction: +30% weather impact, +18% events, 82% confidence*
-
-![Post-Service Feedback Loop](https://via.placeholder.com/800x450/ca8a04/ffffff?text=Feedback+Loop+%7C+Actual+vs+Predicted)  
-*Real covers input + notes → continuous learning loop**
-
 
 ### Architecture (3 Layers)
 
