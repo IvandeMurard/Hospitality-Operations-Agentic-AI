@@ -16,13 +16,13 @@
 ### Problem
 Restaurant managers spend **5–8 hours/week** on manual forecasting with ~**70%** accuracy → over/under-staffing, food waste, operational stress.
 
-### Solution: (Ambient) AI Colleague
+### Solution: A new (AI) Colleague
 An agent that:
 - **Anticipates** demand (covers, staffing, purchases) using RAG + external signals (weather, events, holidays, real-time social sentiment)
-- **Explains** its predictions (impact %, confidence score)
-- **Learns** from your corrections (feedback loop → accuracy improves over time)
-- **Delivers where you work**: WhatsApp/Slack for daily briefs, dashboard for config & deep dive
-- **PMS-agnostic**: semantic layer connects Mews, Opera, Apaleo, Cloudbeds, etc. without lock-in
+- **Explains** its predictions (impact %, confidence score) for transparency and adoption
+- **Learns** from your corrections/PMS data (feedback loop) for autonomous and continuous improvement
+- **Delivers where you work**: WhatsApp/Slack for daily briefs, dashboard for config & deep dive, not a new dashboard to onboard
+- **PMS-agnostic**: semantic layer connects Mews, Opera, Apaleo, Cloudbeds, etc. without lock-in. Yes!
 
 | Classic Dashboard            | Ambient Agent (Aetherix)              |
 |------------------------------|---------------------------------------|
@@ -41,7 +41,8 @@ An agent that:
 *Example of explained prediction: +30% weather impact, +18% events, 82% confidence*
 
 ![Post-Service Feedback Loop](https://via.placeholder.com/800x450/ca8a04/ffffff?text=Feedback+Loop+%7C+Actual+vs+Predicted)  
-*Real covers input + notes → continuous learning loop*
+*Real covers input + notes → continuous learning loop**
+
 
 ### Architecture (3 Layers)
 
@@ -80,11 +81,11 @@ An agent that:
 - Simulated time saved: **~4–6 hours/week** per restaurant
 - Vector search latency: < 300 ms (Qdrant + Mistral)
 
-### Roadmap (Linear-style)
+### Roadmap (hosted on Linear)
 
 - ✅ Phase 1: Backend API + agents (Q3 2025)
 - ✅ Phase 2: RAG + 495 patterns (Q4 2025)
-- 🚧 Phase 3: Dashboard + feedback loop (ongoing, the Streamlit prototype is live - shipping very early!)
+- 🚧 Phase 3: Dashboard + feedback loop (ongoing, the Streamlit prototype is live, share feedback!)
 - □ Phase 4: Semantic layer + real PMS (Open to partnerships!)
 - □ Phase 5: Full ambient delivery (proactive WhatsApp, voice, NLP)
 
@@ -96,6 +97,7 @@ An agent that:
 
 **Looking for**: Feedback!, partnerships, beta hotels (even with mock data), **a product role in hotel tech**.
 
+**Say hi!**
 Built with ❤️ by Ivan de Murard for hotels, restaurants, and those who love them
 [Portfolio](https://ivandemurard.com) · [X](https://x.com/ivandemurard) · [LinkedIn](https://linkedin.com/in/ivandemurard) · [Book a Call](https://cal.com/ivandemurard/30min)
 
