@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![HF Spaces](https://img.shields.io/badge/HuggingFace-Spaces-blueviolet)](https://huggingface.co/spaces/ivandemurard/fb-agent-api)
 
-**Live Dashboard (Phase 3 MVP)** → https://aetherix.streamlit.app/
+**Live Dashboard (Phase 3, early prototype)** → https://aetherix.streamlit.app/
 
 ### Real Problem (Hospitality 2026)
 Restaurant managers spend **5–8 hours/week** on manual forecasting with ~**70%** accuracy → over/under-staffing, food waste, operational stress.
@@ -34,7 +34,7 @@ An agent that:
 
 ```mermaid
 flowchart TD
-    A[F&B Ambient Agent] --> B[Intelligence Layer<br>RAG + Reasoning]
+    A[Aetherix] --> B[Intelligence Layer<br>RAG + Reasoning]
     A --> C[Semantic Layer<br>PMS-Agnostic]
     A --> D[Delivery Layer<br>Ambient]
 
