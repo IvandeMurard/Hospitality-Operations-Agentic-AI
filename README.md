@@ -1,4 +1,3 @@
-```markdown
 # Aetherix – F&B Ambient Agent  
 **PMS-agnostic intelligence layer to anticipate staffing & F&B needs in hotels**
 
@@ -71,6 +70,7 @@ flowchart TD
     style Intelligence fill:#1e3a8a,stroke:#333,stroke-width:2px,color:#fff
     style Semantic fill:#065f46,stroke:#333,stroke-width:2px,color:#fff
     style Delivery fill:#ca8a04,stroke:#333,stroke-width:2px,color:#fff
+```
 
 Tech Stack (2026-ready)Backend: FastAPI · Python 3.11
 AI: Claude Sonnet 4 (Anthropic) · Mistral Embeddings
